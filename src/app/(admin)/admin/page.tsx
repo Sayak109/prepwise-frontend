@@ -1,0 +1,6 @@
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { tests } from "@/data/tests"; import { topics } from "@/data/topics"; import { users } from "@/data/users";
+export default function AdminPage() {
+  const editors = users.filter((u) => u.role === "EDITOR");
+  return <AdminLayout><h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2><div className="grid gap-4 md:grid-cols-3"><div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Users</p><p className="text-2xl font-bold">{users.length}</p></div><div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Topics</p><p className="text-2xl font-bold">{topics.length}</p></div><div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Tests</p><p className="text-2xl font-bold">{tests.length}</p></div></div><section className="mt-6 rounded-xl border p-4"><h3 className="font-semibold mb-2">Editor Topic Permissions</h3><ul className="text-sm space-y-1">{editors.map((editor) => <li key={editor.id}>{editor.name} - {topics.filter((topic) => topic.editorIds.includes(editor.id)).map((topic) => topic.title).join(", ")}</li>)}</ul></section></AdminLayout>;
+}

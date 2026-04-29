@@ -1,0 +1,5 @@
+"use client";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart } from "recharts";
+export function DashboardCharts({ accuracyData, attemptsData }: { accuracyData: { topic: string; accuracy: number }[]; attemptsData: { name: string; score: number }[] }) {
+  return <div className="grid gap-4 lg:grid-cols-2"><section className="rounded-xl border p-4 bg-card"><h3 className="mb-3 font-semibold">Accuracy by Topic</h3><div className="h-64"><ResponsiveContainer width="100%" height="100%"><BarChart data={accuracyData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="topic" /><YAxis /><Tooltip /><Bar dataKey="accuracy" fill="hsl(var(--primary))" /></BarChart></ResponsiveContainer></div></section><section className="rounded-xl border p-4 bg-card"><h3 className="mb-3 font-semibold">Recent Attempts</h3><div className="h-64"><ResponsiveContainer width="100%" height="100%"><LineChart data={attemptsData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line dataKey="score" stroke="hsl(var(--primary))" /></LineChart></ResponsiveContainer></div></section></div>;
+}
