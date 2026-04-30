@@ -199,18 +199,6 @@
   font-size: 15px;
 }
 
-.visualAid {
-  margin-top: 16px;
-  border: 1px solid #c8c4d5;
-  border-radius: 12px;
-  height: 150px;
-  display: grid;
-  place-items: center;
-  color: #777584;
-  font-style: italic;
-  background: linear-gradient(180deg, #f6f2fc, #ece7f4);
-}
-
 .actions {
   margin-top: 18px;
   padding-top: 16px;
@@ -384,37 +372,7 @@
 .dotCurrent { border: 2px solid #1f108e; background: #ffffff; }
 
 .footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 28px;
-  border-top: 1px solid #e4e1eb;
-  background: #ffffff;
-  font-size: 12px;
-  color: #777584;
-}
-
-.footerTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: #9a97a9;
-  margin-bottom: 3px;
-}
-
-.footerLinks {
-  display: flex;
-  gap: 18px;
-}
-
-.footerLinks a {
-  color: #777584;
-  text-decoration: none;
-}
-
-.footerLinks a:hover {
-  color: #0f0069;
-  text-decoration: underline;
+  display: none;
 }
 
 .startWrap {

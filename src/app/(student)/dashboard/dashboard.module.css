@@ -1,0 +1,277 @@
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 0 24px;
+}
+
+.hero {
+  text-align: center;
+  margin: 10px 0 28px;
+}
+
+.hero h1 {
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: #1b1b22;
+}
+
+.hero p {
+  color: #464553;
+  font-size: 16px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #c8c4d5;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+}
+
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #464553;
+  margin-bottom: 8px;
+}
+
+.valueRow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.valuePrimary {
+  color: #1f108e;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.valueNeutral {
+  color: #1b1b22;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.unit {
+  color: #777584;
+  font-weight: 600;
+}
+
+.progressTrack {
+  margin-top: 14px;
+  height: 6px;
+  border-radius: 999px;
+  background: #eae6f1;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #1f108e;
+}
+
+.subRow {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  color: #464553;
+  font-size: 13px;
+  align-items: center;
+}
+
+.streakNum {
+  color: #752c00;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.recommend {
+  background: #ffffff;
+  border: 1px solid #c8c4d5;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 28px;
+}
+
+.recImg {
+  min-height: 220px;
+  position: relative;
+}
+
+.recImg img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recBody {
+  padding: 26px;
+}
+
+.pill {
+  display: inline-block;
+  background: #d0e1fb;
+  color: #54647a;
+  border-radius: 6px;
+  padding: 4px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.recBody h2 {
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.recBody p {
+  color: #464553;
+  margin-bottom: 18px;
+  max-width: 520px;
+}
+
+.recActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn {
+  background: #1f108e;
+  color: #ffffff;
+  border: 1px solid #1f108e;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primaryBtn:hover {
+  opacity: 0.95;
+}
+
+.hint {
+  color: #777584;
+  font-size: 13px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionHead h3 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.linkBtn {
+  color: #1f108e;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.attempts {
+  display: grid;
+  gap: 12px;
+}
+
+.attemptItem {
+  background: #ffffff;
+  border: 1px solid #c8c4d5;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attemptLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attemptIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #eae6f1;
+  display: grid;
+  place-items: center;
+  color: #464553;
+  flex-shrink: 0;
+}
+
+.attemptTitle {
+  font-weight: 700;
+}
+
+.attemptSub {
+  font-size: 13px;
+  color: #777584;
+}
+
+.attemptRight {
+  text-align: right;
+}
+
+.attemptScore {
+  font-weight: 900;
+}
+
+.statusPill {
+  margin-top: 4px;
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.passed { background: #dcfce7; color: #166534; }
+.incomplete { background: #fee2e2; color: #991b1b; }
+.mastered { background: #dcfce7; color: #166534; }
+
+@media (min-width: 768px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .recommend {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+

@@ -1,12 +1,10 @@
 import {
-  Bell,
   CalendarCheck2,
   ChartColumnBig,
   CircleAlert,
   Home,
   BookOpen,
   Medal,
-  Settings,
   Sparkles,
   Clock3,
   Timer,
@@ -16,6 +14,7 @@ import { attempts } from "@/data/attempts";
 import { tests } from "@/data/tests";
 import styles from "@/app/(student)/results/results.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
+import { AppFooter } from "@/components/layout/app-footer";
 
 export default function ResultsPage() {
   const latestAttempt = attempts[attempts.length - 1];
@@ -35,15 +34,7 @@ export default function ResultsPage() {
 
   return (
     <div className={styles.page}>
-      <StudentTopNav
-        rightSlot={
-          <div className={styles.topIcons}>
-            <button><Bell size={18} /></button>
-            <button><Settings size={18} /></button>
-            <span className={styles.avatar} />
-          </div>
-        }
-      />
+      <StudentTopNav />
 
       <main className={styles.main}>
         <section className={styles.heading}>
@@ -183,6 +174,8 @@ export default function ResultsPage() {
           </article>
         </section>
       </main>
+
+      <AppFooter />
 
       <nav className={styles.mobileBottomNav}>
         <a href="#"><Home size={18} /><span>Home</span></a>

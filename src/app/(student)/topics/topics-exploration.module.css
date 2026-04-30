@@ -1,0 +1,290 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fcf8ff;
+  color: #1b1b22;
+  font-family: var(--font-sans), "Inter", sans-serif;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 34px 22px 90px;
+  flex: 1;
+}
+
+.hero {
+  margin-top: 26px;
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  max-width: 680px;
+  color: #464553;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  background: #1f108e;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.primaryBtn:hover {
+  opacity: 0.94;
+}
+
+.secondaryBtn {
+  background: #ffffff;
+  border-color: #c8c4d5;
+  color: #1f108e;
+}
+
+.searchRow {
+  margin-bottom: 22px;
+}
+
+.searchWrap {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #c8c4d5;
+  border-radius: 12px;
+  padding: 12px 14px 12px 44px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: #777584;
+}
+
+.searchWrap input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 15px;
+  background: transparent;
+  color: #1b1b22;
+}
+
+.loading {
+  color: #777584;
+  margin-bottom: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e4e1eb;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.imgWrap {
+  height: 160px;
+  border-radius: 10px;
+  background: #f0ecf6;
+  overflow: hidden;
+}
+
+.imgWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.badgeWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.labelCaps {
+  width: max-content;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.labelAdvanced {
+  background: #d0e1fb;
+  color: #1f108e;
+}
+
+.labelCore {
+  background: #f0ecf6;
+  color: #54647a;
+}
+
+.labelFundamental {
+  background: #ffdbcc;
+  color: #351000;
+}
+
+.cardTitle {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.moreIcon {
+  color: #777584;
+}
+
+.masteryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 14px;
+  color: #464553;
+}
+
+.masteryLabel {
+  color: #464553;
+  font-weight: 500;
+}
+
+.masteryValue {
+  font-weight: 800;
+  color: #1f108e;
+}
+
+.progressTrack {
+  height: 6px;
+  background: #e4e1eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #1f108e;
+  border-radius: 999px;
+}
+
+.metaRow {
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  color: #54647a;
+  font-size: 14px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctaWrap {
+  margin-top: 6px;
+}
+
+.primaryBtnFull,
+.reviewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.primaryBtnFull {
+  background: #1f108e;
+  color: #ffffff;
+}
+
+.primaryBtnFull:hover {
+  opacity: 0.94;
+}
+
+.reviewBtn {
+  background: #ffffff;
+  border-color: #1f108e;
+  color: #1f108e;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .main {
+    padding: 34px 28px 90px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+

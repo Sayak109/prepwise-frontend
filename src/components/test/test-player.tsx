@@ -6,6 +6,7 @@ import { Timer } from "@/components/test/timer";
 import { Clock3, Flag, Info, MoveLeft, MoveRight } from "lucide-react";
 import styles from "@/components/test/test-player.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
+import { AppFooter } from "@/components/layout/app-footer";
 
 interface TestPlayerProps {
   testId: string;
@@ -130,8 +131,6 @@ export function TestPlayer({
             ) : null}
           </article>
 
-          <div className={styles.visualAid}>Visual aid for calculus logic (Optional)</div>
-
           <div className={styles.actions}>
             <button
               className={styles.ghostButton}
@@ -210,18 +209,7 @@ export function TestPlayer({
         </aside>
       </main>
 
-      <footer className={styles.footer}>
-        <div>
-          <p className={styles.footerTitle}>PrepWise Adaptive Exam Systems</p>
-          <p>© 2024 PrepWise Adaptive Exam Systems. All rights reserved.</p>
-        </div>
-        <div className={styles.footerLinks}>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Contact Support</a>
-          <a href="#">Academic Integrity</a>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

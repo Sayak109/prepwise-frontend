@@ -3,6 +3,8 @@
   background: #fcf8ff;
   color: #1b1b22;
   font-family: var(--font-sans), "Inter", sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -80,6 +82,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px 94px;
+  flex: 1;
 }
 
 .heading {

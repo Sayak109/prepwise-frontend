@@ -1,15 +1,53 @@
 "use client";
 import Link from "next/link";
-import { Bell, Bookmark, CircleHelp, Clock3, FileText, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Bookmark,
+  Clock3,
+  FileText,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useTests } from "@/hooks/use-tests";
 import styles from "@/app/(student)/tests/tests-listing.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 
 const curatedCards = [
-  { id: "c1", title: "SAT Mock Test #5", category: "Mock Exams", questions: 154, duration: 180, level: "Advanced Level", premium: false },
-  { id: "c2", title: "Advanced Calculus Midterm", category: "Mathematics", questions: 25, duration: 90, level: "Expert Level", premium: true },
-  { id: "c3", title: "Organic Chemistry Quiz", category: "Science", questions: 40, duration: 45, level: "Intermediate Level", premium: false },
-  { id: "c4", title: "Modern History Analysis", category: "Humanities", questions: 60, duration: 120, level: "Intermediate Level", premium: false },
+  {
+    id: "c1",
+    title: "SAT Mock Test #5",
+    category: "Mock Exams",
+    questions: 154,
+    duration: 180,
+    level: "Advanced Level",
+    premium: false,
+  },
+  {
+    id: "c2",
+    title: "Advanced Calculus Midterm",
+    category: "Mathematics",
+    questions: 25,
+    duration: 90,
+    level: "Expert Level",
+    premium: true,
+  },
+  {
+    id: "c3",
+    title: "Organic Chemistry Quiz",
+    category: "Science",
+    questions: 40,
+    duration: 45,
+    level: "Intermediate Level",
+    premium: false,
+  },
+  {
+    id: "c4",
+    title: "Modern History Analysis",
+    category: "Humanities",
+    questions: 60,
+    duration: 120,
+    level: "Intermediate Level",
+    premium: false,
+  },
 ];
 
 export default function TestsPage() {
@@ -25,22 +63,14 @@ export default function TestsPage() {
     href: `/tests/${test.id}`,
   }));
 
-  const cards = [...apiCards, ...curatedCards.map((c) => ({ ...c, href: "/tests/test-1" }))];
+  const cards = [
+    ...apiCards,
+    ...curatedCards.map((c) => ({ ...c, href: "/tests/test-1" })),
+  ];
 
   return (
     <div className={styles.page}>
-      <StudentTopNav
-        rightSlot={
-          <>
-            <button className={styles.proButton}>Upgrade Pro</button>
-            <div className={styles.iconWrap}>
-              <Bell size={18} />
-              <CircleHelp size={18} />
-            </div>
-            <div className={styles.avatar} />
-          </>
-        }
-      />
+      <StudentTopNav />
 
       <div className={styles.bodyWrap}>
         <aside className={styles.sidebar}>
@@ -48,29 +78,68 @@ export default function TestsPage() {
             <h2>Filters</h2>
             <div className={styles.filterGroup}>
               <h3>Subject</h3>
-              <label><input type="checkbox" defaultChecked />All Subjects</label>
-              <label><input type="checkbox" />Mathematics</label>
-              <label><input type="checkbox" />Science</label>
-              <label><input type="checkbox" />Mock Exams</label>
+              <label>
+                <input type="checkbox" defaultChecked />
+                All Subjects
+              </label>
+              <label>
+                <input type="checkbox" />
+                Mathematics
+              </label>
+              <label>
+                <input type="checkbox" />
+                Science
+              </label>
+              <label>
+                <input type="checkbox" />
+                Mock Exams
+              </label>
             </div>
             <div className={styles.filterGroup}>
               <h3>Difficulty</h3>
-              <label><input type="checkbox" />Beginner</label>
-              <label><input type="checkbox" />Intermediate</label>
-              <label><input type="checkbox" />Advanced</label>
+              <label>
+                <input type="checkbox" />
+                Beginner
+              </label>
+              <label>
+                <input type="checkbox" />
+                Intermediate
+              </label>
+              <label>
+                <input type="checkbox" />
+                Advanced
+              </label>
             </div>
             <div className={styles.filterGroup}>
               <h3>Duration</h3>
-              <label><input type="radio" name="duration" />Under 45m</label>
-              <label><input type="radio" name="duration" />45m - 90m</label>
-              <label><input type="radio" name="duration" />Over 90m</label>
+              <label>
+                <input type="radio" name="duration" />
+                Under 45m
+              </label>
+              <label>
+                <input type="radio" name="duration" />
+                45m - 90m
+              </label>
+              <label>
+                <input type="radio" name="duration" />
+                Over 90m
+              </label>
             </div>
             <div className={styles.filterGroup}>
               <h3>Price</h3>
-              <label><input type="checkbox" />Free</label>
-              <label><input type="checkbox" />Premium (Pro)</label>
+              <label>
+                <input type="checkbox" />
+                Free
+              </label>
+              <label>
+                <input type="checkbox" />
+                Premium (Pro)
+              </label>
             </div>
-            <button className={styles.clearBtn}><SlidersHorizontal size={14} />Clear All Filters</button>
+            <button className={styles.clearBtn}>
+              <SlidersHorizontal size={14} />
+              Clear All Filters
+            </button>
           </div>
         </aside>
 
@@ -83,7 +152,9 @@ export default function TestsPage() {
             </div>
           </div>
 
-          {isLoading ? <p className={styles.loading}>Loading exams...</p> : null}
+          {isLoading ? (
+            <p className={styles.loading}>Loading exams...</p>
+          ) : null}
 
           <div className={styles.grid}>
             {cards.slice(0, 3).map((card, idx) => (
@@ -92,17 +163,31 @@ export default function TestsPage() {
                   <div className={styles.cardTop}>
                     <span className={styles.badge}>{card.category}</span>
                     <button className={styles.bookmarkBtn}>
-                      <Bookmark size={18} fill={idx === 2 ? "currentColor" : "none"} />
+                      <Bookmark
+                        size={18}
+                        fill={idx === 2 ? "currentColor" : "none"}
+                      />
                     </button>
                   </div>
                   <h3>{card.title}</h3>
                   <div className={styles.meta}>
-                    <p><FileText size={16} />{card.questions} Questions</p>
-                    <p><Clock3 size={16} />{card.duration} Minutes</p>
-                    <p><SlidersHorizontal size={16} />{card.level}</p>
+                    <p>
+                      <FileText size={16} />
+                      {card.questions} Questions
+                    </p>
+                    <p>
+                      <Clock3 size={16} />
+                      {card.duration} Minutes
+                    </p>
+                    <p>
+                      <SlidersHorizontal size={16} />
+                      {card.level}
+                    </p>
                   </div>
                 </div>
-                <Link href={card.href} className={styles.startBtn}>Start Test</Link>
+                <Link href={card.href} className={styles.startBtn}>
+                  Start Test
+                </Link>
               </article>
             ))}
 
@@ -119,16 +204,29 @@ export default function TestsPage() {
                 <div className={styles.cardBody}>
                   <div className={styles.cardTop}>
                     <span className={styles.badge}>{card.category}</span>
-                    <button className={styles.bookmarkBtn}><Bookmark size={18} /></button>
+                    <button className={styles.bookmarkBtn}>
+                      <Bookmark size={18} />
+                    </button>
                   </div>
                   <h3>{card.title}</h3>
                   <div className={styles.meta}>
-                    <p><FileText size={16} />{card.questions} Questions</p>
-                    <p><Clock3 size={16} />{card.duration} Minutes</p>
-                    <p><SlidersHorizontal size={16} />{card.level}</p>
+                    <p>
+                      <FileText size={16} />
+                      {card.questions} Questions
+                    </p>
+                    <p>
+                      <Clock3 size={16} />
+                      {card.duration} Minutes
+                    </p>
+                    <p>
+                      <SlidersHorizontal size={16} />
+                      {card.level}
+                    </p>
                   </div>
                 </div>
-                <Link href={card.href} className={styles.startBtn}>Start Test</Link>
+                <Link href={card.href} className={styles.startBtn}>
+                  Start Test
+                </Link>
               </article>
             ))}
           </div>
@@ -138,7 +236,7 @@ export default function TestsPage() {
       <footer className={styles.footer}>
         <div className={styles.footerLeft}>
           <span>PrepWise</span>
-          <p>© 2024 PrepWise Adaptive Exam Systems. All rights reserved.</p>
+          <p>© 2024 PrepWise. All rights reserved.</p>
         </div>
         <div className={styles.footerLinks}>
           <a href="#">Privacy Policy</a>

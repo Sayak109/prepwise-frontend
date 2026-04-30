@@ -1,11 +1,23 @@
 export function AppFooter() {
   return (
-    <footer className="border-t mt-8">
-      <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-muted-foreground flex flex-col gap-2 sm:flex-row sm:justify-between">
-        <p>PrepWise by Your Name</p>
-        <div className="flex gap-4">
-          <a href="https://github.com/your-username" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
-          <a href="https://linkedin.com/in/your-username" target="_blank" rel="noreferrer" className="hover:text-foreground">LinkedIn</a>
+    <footer className="bg-white border-t border-[#e4e1eb] py-8 px-6 mt-12">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <span className="text-sm font-bold text-[#1f108e]">PrepWise</span>
+          <p className="text-xs text-[#777584]">
+            © 2024 PrepWise. All rights reserved.
+          </p>
+        </div>
+        <div className="flex gap-6 text-xs text-[#777584]">
+          <a className="hover:text-[#1f108e] transition-colors" href="#">
+            Privacy Policy
+          </a>
+          <a className="hover:text-[#1f108e] transition-colors" href="#">
+            Terms of Service
+          </a>
+          <a className="hover:text-[#1f108e] transition-colors" href="#">
+            Contact Support
+          </a>
         </div>
       </div>
     </footer>

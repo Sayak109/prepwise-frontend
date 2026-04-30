@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchTestById } from "@/services/mock-api";
+import { AppFooter } from "@/components/layout/app-footer";
 
 export default async function TestResultPage({
   params,
@@ -21,8 +22,9 @@ export default async function TestResultPage({
   const attempted = `${answered}/${total}`;
 
   return (
-    <main className="min-h-screen bg-[#fcf8ff] text-[#1b1b22] font-sans">
-      <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="min-h-screen flex flex-col bg-[#fcf8ff] text-[#1b1b22] font-sans">
+      <main className="flex-1">
+        <div className="mx-auto max-w-4xl px-4 py-10">
         <p className="text-xs uppercase tracking-[0.08em] font-semibold text-[#1f108e] mb-2">
           Test Submitted
         </p>
@@ -88,7 +90,9 @@ export default async function TestResultPage({
             Open Full Results Dashboard
           </Link>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+      <AppFooter />
+    </div>
   );
 }
