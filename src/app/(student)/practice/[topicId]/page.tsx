@@ -1,19 +1,26 @@
-import { notFound } from "next/navigation";
-import { fetchQuestionsByTopic, fetchTopicById } from "@/services/mock-api";
+"use client";
+
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { PracticeSession } from "@/components/practice/practice-session";
+import { startTopicPractice } from "@/services/student-api";
 
-export default async function PracticePage({
-  params,
-}: {
-  params: Promise<{ topicId: string }>;
-}) {
-  const { topicId } = await params;
-  const topic = await fetchTopicById(topicId);
-  if (!topic) notFound();
+export default function PracticePage() {
+  const params = useParams<{ topicId: string }>();
+  const topicId = params.topicId;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["practice", topicId],
+    queryFn: () => startTopicPractice(topicId),
+    enabled: Boolean(topicId),
+  });
 
-  const topicQuestions = await fetchQuestionsByTopic(topicId);
+  if (isLoading) {
+    return <PracticeSession topicId={topicId} topicTitle="Loading practice..." questions={[]} />;
+  }
 
-  return (
-    <PracticeSession topicTitle={topic.title} questions={topicQuestions} />
-  );
+  if (isError || !data) {
+    return <PracticeSession topicId={topicId} topicTitle="Practice unavailable" questions={[]} />;
+  }
+
+  return <PracticeSession topicId={topicId} topicTitle={data.topic.title} questions={data.questions} />;
 }

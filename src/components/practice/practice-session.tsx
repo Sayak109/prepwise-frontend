@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AppFooter } from "@/components/layout/app-footer";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
+import { addTopicTime, markTopicQuestionSolved } from "@/lib/topic-progress";
 import type { Question } from "@/types";
 import styles from "@/components/practice/practice-session.module.css";
 
@@ -24,9 +25,11 @@ function normalize(s: string) {
 }
 
 export function PracticeSession({
+  topicId,
   topicTitle,
   questions,
 }: {
+  topicId: string;
   topicTitle: string;
   questions: Question[];
 }) {
@@ -40,6 +43,17 @@ export function PracticeSession({
   const [showExplanation, setShowExplanation] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (!topicId) return;
+    const interval = window.setInterval(() => addTopicTime(topicId, 5), 5000);
+    return () => window.clearInterval(interval);
+  }, [topicId]);
+
+  useEffect(() => {
+    if (!topicId || !submitted || !q) return;
+    markTopicQuestionSolved(topicId, q.id);
+  }, [topicId, submitted, q]);
 
   const isAnswered = useMemo(() => {
     if (!q) return false;

@@ -7,9 +7,11 @@ import { Clock3, Flag, Info, MoveLeft, MoveRight } from "lucide-react";
 import styles from "@/components/test/test-player.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { AppFooter } from "@/components/layout/app-footer";
+import { completeTestAttempt, flagTestQuestion, saveTestAnswer } from "@/services/student-api";
 
 interface TestPlayerProps {
   testId: string;
+  attemptId: string;
   testTitle: string;
   questions: Question[];
   durationMinutes: number;
@@ -17,6 +19,7 @@ interface TestPlayerProps {
 
 export function TestPlayer({
   testId,
+  attemptId,
   testTitle,
   questions,
   durationMinutes,
@@ -28,6 +31,7 @@ export function TestPlayer({
   const activeQuestion = questions[activeIndex];
   const answeredCount = Object.keys(answers).length;
   const total = questions.length;
+  const progressPct = total ? Math.round((answeredCount / total) * 100) : 0;
   const score = useMemo(() => {
     return questions.reduce((sum, q) => {
       const userAnswer = (answers[q.id] ?? "").trim().toLowerCase();
@@ -39,10 +43,32 @@ export function TestPlayer({
   }, [answers, questions]);
   const accuracy = Math.round((score / Math.max(total, 1)) * 100);
 
-  function submitTest() {
+  async function submitTest() {
+    if (attemptId) {
+      await completeTestAttempt(attemptId);
+    }
     router.push(
       `/tests/${testId}/results?score=${score}&total=${total}&accuracy=${accuracy}&answered=${answeredCount}`
     );
+  }
+
+  async function persistAnswer(questionId: string, value: string, selectedOptionId?: string) {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    if (!attemptId) return;
+    await saveTestAnswer({
+      attemptId,
+      questionId,
+      selectedOptionId,
+      answerText: selectedOptionId ? undefined : value,
+    });
+  }
+
+  async function toggleFlag(questionId: string) {
+    const flagged = !flags[questionId];
+    setFlags((prev) => ({ ...prev, [questionId]: flagged }));
+    if (attemptId) {
+      await flagTestQuestion(attemptId, questionId, flagged);
+    }
   }
 
   return (
@@ -61,7 +87,7 @@ export function TestPlayer({
               Submit Test
             </button>
           </div>
-          }
+        }
       />
 
       <main className={styles.canvas}>
@@ -76,12 +102,12 @@ export function TestPlayer({
           </div>
 
           <article className={styles.questionCard}>
-            <h2 className={styles.questionPrompt}>{activeQuestion.prompt}</h2>
+            <h2 className={styles.questionPrompt}>{activeQuestion?.prompt ?? "No questions available for this test."}</h2>
 
-            {activeQuestion.type === "MCQ" ? (
+            {activeQuestion?.type === "MCQ" ? (
               <div className={styles.optionsWrap}>
                 {activeQuestion.options?.map((opt) => {
-                  const checked = answers[activeQuestion.id] === opt.value;
+                  const checked = answers[activeQuestion.id] === opt.id;
                   return (
                     <label
                       key={opt.id}
@@ -91,13 +117,10 @@ export function TestPlayer({
                         className={styles.optionInput}
                         type="radio"
                         name={activeQuestion.id}
-                        value={opt.value}
+                        value={opt.id}
                         checked={checked}
                         onChange={(e) =>
-                          setAnswers((prev) => ({
-                            ...prev,
-                            [activeQuestion.id]: e.target.value,
-                          }))
+                          void persistAnswer(activeQuestion.id, e.target.value, e.target.value)
                         }
                       />
                       <span className={styles.optionText}>{opt.value}</span>
@@ -107,25 +130,25 @@ export function TestPlayer({
               </div>
             ) : null}
 
-            {activeQuestion.type === "SHORT_ANSWER" ? (
+            {activeQuestion?.type === "SHORT_ANSWER" ? (
               <input
                 className={styles.textInput}
                 placeholder="Type your exact answer"
                 value={answers[activeQuestion.id] ?? ""}
                 onChange={(e) =>
-                  setAnswers((prev) => ({ ...prev, [activeQuestion.id]: e.target.value }))
+                  void persistAnswer(activeQuestion.id, e.target.value)
                 }
               />
             ) : null}
 
-            {activeQuestion.type === "DESCRIPTIVE" ? (
+            {activeQuestion?.type === "DESCRIPTIVE" ? (
               <textarea
                 className={styles.textArea}
                 rows={6}
                 placeholder="Write your descriptive answer"
                 value={answers[activeQuestion.id] ?? ""}
                 onChange={(e) =>
-                  setAnswers((prev) => ({ ...prev, [activeQuestion.id]: e.target.value }))
+                  void persistAnswer(activeQuestion.id, e.target.value)
                 }
               />
             ) : null}
@@ -141,16 +164,16 @@ export function TestPlayer({
 
             <button
               className={styles.flagButton}
-              onClick={() =>
-                setFlags((prev) => ({ ...prev, [activeQuestion.id]: !prev[activeQuestion.id] }))
-              }
+              disabled={!activeQuestion}
+              onClick={() => activeQuestion ? void toggleFlag(activeQuestion.id) : undefined}
             >
               <Flag size={16} />
-              {flags[activeQuestion.id] ? "Remove Flag" : "Flag for Review"}
+              {activeQuestion && flags[activeQuestion.id] ? "Remove Flag" : "Flag for Review"}
             </button>
 
             <button
               className={styles.primaryButton}
+              disabled={!questions.length}
               onClick={() => setActiveIndex((v) => Math.min(questions.length - 1, v + 1))}
             >
               Next <MoveRight size={16} />
@@ -164,7 +187,7 @@ export function TestPlayer({
             <div className={styles.progressTrack}>
               <div
                 className={styles.progressValue}
-                style={{ width: `${Math.round((answeredCount / questions.length) * 100)}%` }}
+                style={{ width: `${progressPct}%` }}
               />
             </div>
             <div className={styles.progressMeta}>

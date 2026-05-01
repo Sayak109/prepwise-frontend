@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bookmark,
   Clock3,
@@ -10,63 +11,74 @@ import {
 import { useTests } from "@/hooks/use-tests";
 import styles from "@/app/(student)/tests/tests-listing.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
+import type { Test } from "@/types";
 
-const curatedCards = [
-  {
-    id: "c1",
-    title: "SAT Mock Test #5",
-    category: "Mock Exams",
-    questions: 154,
-    duration: 180,
-    level: "Advanced Level",
-    premium: false,
-  },
-  {
-    id: "c2",
-    title: "Advanced Calculus Midterm",
-    category: "Mathematics",
-    questions: 25,
-    duration: 90,
-    level: "Expert Level",
-    premium: true,
-  },
-  {
-    id: "c3",
-    title: "Organic Chemistry Quiz",
-    category: "Science",
-    questions: 40,
-    duration: 45,
-    level: "Intermediate Level",
-    premium: false,
-  },
-  {
-    id: "c4",
-    title: "Modern History Analysis",
-    category: "Humanities",
-    questions: 60,
-    duration: 120,
-    level: "Intermediate Level",
-    premium: false,
-  },
+type DurationFilter = "UNDER_15" | "BETWEEN_15_30" | "BETWEEN_30_50" | "OVER_50";
+
+const difficultyOptions: Array<{ label: string; value: Test["difficulty"] }> = [
+  { label: "Beginner", value: "EASY" },
+  { label: "Intermediate", value: "MEDIUM" },
+  { label: "Advanced", value: "HARD" },
 ];
 
-export default function TestsPage() {
-  const { data, isLoading } = useTests();
-  const apiCards = (data ?? []).map((test, index) => ({
-    id: test.id,
-    title: test.title,
-    category: test.premium ? "Premium" : "Practice",
-    questions: test.questionIds.length,
-    duration: test.durationMinutes,
-    level: index % 2 === 0 ? "Intermediate Level" : "Advanced Level",
-    premium: test.premium,
-    href: `/tests/${test.id}`,
-  }));
+const durationOptions: Array<{ label: string; value: DurationFilter }> = [
+  { label: "Under 15m", value: "UNDER_15" },
+  { label: "15m - 30m", value: "BETWEEN_15_30" },
+  { label: "30m - 50m", value: "BETWEEN_30_50" },
+  { label: "Over 50m", value: "OVER_50" },
+];
 
-  const cards = [
-    ...apiCards,
-    ...curatedCards.map((c) => ({ ...c, href: "/tests/test-1" })),
-  ];
+function difficultyLabel(difficulty?: Test["difficulty"]) {
+  if (difficulty === "EASY") return "Beginner Level";
+  if (difficulty === "MEDIUM") return "Intermediate Level";
+  if (difficulty === "HARD") return "Advanced Level";
+  return "Practice Level";
+}
+
+function durationMatches(duration: number, filter?: DurationFilter) {
+  if (!filter) return true;
+  if (filter === "UNDER_15") return duration < 15;
+  if (filter === "BETWEEN_15_30") return duration >= 15 && duration <= 30;
+  if (filter === "BETWEEN_30_50") return duration > 30 && duration <= 50;
+  return duration > 50;
+}
+
+export default function TestsPage() {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [difficulty, setDifficulty] = useState<Test["difficulty"] | undefined>();
+  const [duration, setDuration] = useState<DurationFilter | undefined>();
+  const { data, isLoading } = useTests({ search: debouncedSearch, difficulty });
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  const cards = useMemo(
+    () =>
+      (data ?? [])
+        .map((test) => ({
+          id: test.id,
+          title: test.title,
+          category: test.premium ? "Premium" : "Practice",
+          questions: test.questionCount ?? test.questionIds.length,
+          duration: test.durationMinutes,
+          level: difficultyLabel(test.difficulty),
+          difficulty: test.difficulty,
+          premium: test.premium,
+          href: `/tests/${test.id}`,
+        }))
+        .filter((test) => durationMatches(test.duration, duration)),
+    [data, duration],
+  );
+
+  function clearFilters() {
+    setSearch("");
+    setDebouncedSearch("");
+    setDifficulty(undefined);
+    setDuration(undefined);
+  }
 
   return (
     <div className={styles.page}>
@@ -77,53 +89,35 @@ export default function TestsPage() {
           <div className={styles.stickyCard}>
             <h2>Filters</h2>
             <div className={styles.filterGroup}>
-              <h3>Subject</h3>
-              <label>
-                <input type="checkbox" defaultChecked />
-                All Subjects
-              </label>
-              <label>
-                <input type="checkbox" />
-                Mathematics
-              </label>
-              <label>
-                <input type="checkbox" />
-                Science
-              </label>
-              <label>
-                <input type="checkbox" />
-                Mock Exams
-              </label>
-            </div>
-            <div className={styles.filterGroup}>
               <h3>Difficulty</h3>
-              <label>
-                <input type="checkbox" />
-                Beginner
-              </label>
-              <label>
-                <input type="checkbox" />
-                Intermediate
-              </label>
-              <label>
-                <input type="checkbox" />
-                Advanced
-              </label>
+              {difficultyOptions.map((option) => (
+                <label key={option.value}>
+                  <input
+                    type="checkbox"
+                    checked={difficulty === option.value}
+                    onChange={() =>
+                      setDifficulty((current) =>
+                        current === option.value ? undefined : option.value,
+                      )
+                    }
+                  />
+                  {option.label}
+                </label>
+              ))}
             </div>
             <div className={styles.filterGroup}>
               <h3>Duration</h3>
-              <label>
-                <input type="radio" name="duration" />
-                Under 45m
-              </label>
-              <label>
-                <input type="radio" name="duration" />
-                45m - 90m
-              </label>
-              <label>
-                <input type="radio" name="duration" />
-                Over 90m
-              </label>
+              {durationOptions.map((option) => (
+                <label key={option.value}>
+                  <input
+                    type="radio"
+                    name="duration"
+                    checked={duration === option.value}
+                    onChange={() => setDuration(option.value)}
+                  />
+                  {option.label}
+                </label>
+              ))}
             </div>
             <div className={styles.filterGroup}>
               <h3>Price</h3>
@@ -136,7 +130,7 @@ export default function TestsPage() {
                 Premium (Pro)
               </label>
             </div>
-            <button className={styles.clearBtn}>
+            <button className={styles.clearBtn} type="button" onClick={clearFilters}>
               <SlidersHorizontal size={14} />
               Clear All Filters
             </button>
@@ -148,7 +142,11 @@ export default function TestsPage() {
             <h1>Available Exams</h1>
             <div className={styles.searchWrap}>
               <Search size={17} />
-              <input placeholder="Search by exam name, topic, or keyword..." />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by exam name, topic, or keyword..."
+              />
             </div>
           </div>
 
@@ -157,7 +155,7 @@ export default function TestsPage() {
           ) : null}
 
           <div className={styles.grid}>
-            {cards.slice(0, 3).map((card, idx) => (
+            {cards.map((card, idx) => (
               <article key={card.id} className={styles.examCard}>
                 <div className={styles.cardBody}>
                   <div className={styles.cardTop}>
@@ -191,6 +189,10 @@ export default function TestsPage() {
               </article>
             ))}
 
+            {!isLoading && !cards.length ? (
+              <p className={styles.emptyState}>No tests match your filters.</p>
+            ) : null}
+
             <section className={styles.callout}>
               <div className={styles.calloutOverlay}>
                 <span>New Content</span>
@@ -198,37 +200,6 @@ export default function TestsPage() {
                 <button>Explore Topic</button>
               </div>
             </section>
-
-            {cards.slice(3, 4).map((card) => (
-              <article key={card.id} className={styles.examCard}>
-                <div className={styles.cardBody}>
-                  <div className={styles.cardTop}>
-                    <span className={styles.badge}>{card.category}</span>
-                    <button className={styles.bookmarkBtn}>
-                      <Bookmark size={18} />
-                    </button>
-                  </div>
-                  <h3>{card.title}</h3>
-                  <div className={styles.meta}>
-                    <p>
-                      <FileText size={16} />
-                      {card.questions} Questions
-                    </p>
-                    <p>
-                      <Clock3 size={16} />
-                      {card.duration} Minutes
-                    </p>
-                    <p>
-                      <SlidersHorizontal size={16} />
-                      {card.level}
-                    </p>
-                  </div>
-                </div>
-                <Link href={card.href} className={styles.startBtn}>
-                  Start Test
-                </Link>
-              </article>
-            ))}
           </div>
         </main>
       </div>

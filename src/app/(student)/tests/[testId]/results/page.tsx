@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { fetchTestById } from "@/services/mock-api";
 import { AppFooter } from "@/components/layout/app-footer";
 
 export default async function TestResultPage({
@@ -12,11 +10,9 @@ export default async function TestResultPage({
 }) {
   const { testId } = await params;
   const query = await searchParams;
-  const test = await fetchTestById(testId);
-  if (!test) notFound();
 
   const score = Number(query.score ?? 0);
-  const total = Number(query.total ?? test.questionIds.length);
+  const total = Number(query.total ?? 0);
   const accuracy = Number(query.accuracy ?? 0);
   const answered = Number(query.answered ?? 0);
   const attempted = `${answered}/${total}`;
@@ -28,7 +24,7 @@ export default async function TestResultPage({
         <p className="text-xs uppercase tracking-[0.08em] font-semibold text-[#1f108e] mb-2">
           Test Submitted
         </p>
-        <h1 className="text-4xl font-bold mb-2">Result: {test.title}</h1>
+        <h1 className="text-4xl font-bold mb-2">Result: Test submitted</h1>
         <p className="text-[#464553] mb-8">
           Your score has been calculated from the answers submitted in this attempt.
         </p>

@@ -10,18 +10,18 @@ import {
   Timer,
   TrendingUp,
 } from "lucide-react";
-import { attempts } from "@/data/attempts";
-import { tests } from "@/data/tests";
 import styles from "@/app/(student)/results/results.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { AppFooter } from "@/components/layout/app-footer";
+import { fetchAttemptHistory } from "@/services/server-student-api";
 
-export default function ResultsPage() {
-  const latestAttempt = attempts[attempts.length - 1];
-  const latestTest = tests.find((t) => t.id === latestAttempt.testId);
-  const overall = Math.round(
-    attempts.reduce((sum, item) => sum + item.accuracy, 0) / attempts.length
-  );
+export default async function ResultsPage() {
+  const history = await fetchAttemptHistory();
+  const attempts = history.attempts;
+  const latestAttempt = attempts[0];
+  const overall = attempts.length
+    ? Math.round(attempts.reduce((sum, item) => sum + item.scorePercent, 0) / attempts.length)
+    : 0;
 
   const topicAccuracy = [
     { name: "Algebra & Functions", score: 90, color: "high" },
@@ -40,7 +40,7 @@ export default function ResultsPage() {
         <section className={styles.heading}>
           <p className={styles.completed}>
             <CalendarCheck2 size={14} />
-            Completed: {latestTest?.title ?? "SAT Mock Exam #4"}
+            Completed: {latestAttempt?.title ?? "No completed test yet"}
           </p>
           <h1>Performance Summary</h1>
           <p>

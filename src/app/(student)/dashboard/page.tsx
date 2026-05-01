@@ -1,34 +1,25 @@
 import { StudentLayout } from "@/components/layout/student-layout";
 import Link from "next/link";
-import { attempts } from "@/data/attempts";
-import { topics } from "@/data/topics";
-import { tests } from "@/data/tests";
-import { users } from "@/data/users";
 import styles from "@/app/(student)/dashboard/dashboard.module.css";
 import { ArrowRight, Flame, Sigma } from "lucide-react";
+import { fetchDashboard } from "@/services/server-student-api";
+import { getSession } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  const activeUser = users.find((u) => u.role === "STUDENT") ?? users[3];
-  const recent = attempts.filter((a) => a.userId === activeUser.id).slice(-3).reverse();
-
-  const avgAccuracy = Math.round(
-    recent.reduce((sum, item) => sum + item.accuracy, 0) / Math.max(recent.length, 1)
-  );
-
-  const testsCompleted = Math.min(20, attempts.length);
-  const testsGoal = 20;
-  const testsPct = Math.round((testsCompleted / testsGoal) * 100);
-
-  const streakDays = 8;
-  const overallScore = avgAccuracy || 78;
-
-  const weakTopic = topics.find((t) => t.weakForUsers?.includes(activeUser.id)) ?? topics[0];
+  const [session, dashboard] = await Promise.all([getSession(), fetchDashboard()]);
+  const activeUser = session.user;
+  const recent = dashboard.recentAttempts.slice(0, 3);
+  const testsCompleted = dashboard.stats.testsCompleted;
+  const testsGoal = Math.max(dashboard.stats.totalTests, 1);
+  const testsPct = dashboard.stats.testsCompletedPercent;
+  const streakDays = dashboard.stats.studyStreak.currentDays;
+  const overallScore = dashboard.stats.overallScore;
 
   return (
     <StudentLayout>
       <div className={styles.wrap}>
         <header className={styles.hero}>
-          <h1>Good morning, {activeUser.name}.</h1>
+          <h1>Good morning, {activeUser?.name ?? "Student"}.</h1>
           <p>You&apos;re making great progress. Ready to tackle today&apos;s goals?</p>
         </header>
 
@@ -79,13 +70,13 @@ export default async function DashboardPage() {
           </div>
           <div className={styles.recBody}>
             <span className={styles.pill}>Recommended Goal</span>
-            <h2>Master {weakTopic.title}</h2>
+            <h2>Master your next weak topic</h2>
             <p>
               Based on your recent practice, focusing on this topic can boost your score by an
               estimated 5%.
             </p>
             <div className={styles.recActions}>
-              <Link className={styles.primaryBtn} href={`/practice/${weakTopic.id}`}>
+              <Link className={styles.primaryBtn} href="/topics">
                 Start Practice <ArrowRight size={16} />
               </Link>
               <span className={styles.hint}>Estimated time: 25 mins</span>
@@ -103,9 +94,8 @@ export default async function DashboardPage() {
 
           <div className={styles.attempts}>
             {recent.map((a) => {
-              const test = tests.find((t) => t.id === a.testId);
-              const pct = Math.round((a.score / a.total) * 100);
-              const status = pct >= 85 ? "Mastered" : pct >= 70 ? "Passed" : "Incomplete";
+              const pct = a.scorePercent;
+              const status = pct >= 85 ? "Mastered" : a.result === "PASSED" ? "Passed" : "Incomplete";
               const statusClass =
                 status === "Passed" ? styles.passed : status === "Mastered" ? styles.mastered : styles.incomplete;
 
@@ -116,8 +106,8 @@ export default async function DashboardPage() {
                       <Sigma size={18} />
                     </div>
                     <div>
-                      <p className={styles.attemptTitle}>{test?.title ?? "Practice Attempt"}</p>
-                      <p className={styles.attemptSub}>{a.createdAt}</p>
+                      <p className={styles.attemptTitle}>{a.title}</p>
+                      <p className={styles.attemptSub}>{a.attemptedDate}</p>
                     </div>
                   </div>
 

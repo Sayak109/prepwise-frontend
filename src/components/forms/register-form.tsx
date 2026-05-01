@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import toast from "react-hot-toast";
 import { registerAction } from "@/app/actions/auth";
 
 function GoogleIcon() {
@@ -24,8 +25,13 @@ function AppleIcon() {
 }
 
 export function RegisterForm() {
+  const [state, formAction, isPending] = useActionState(registerAction, {});
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (state.error) toast.error(state.error);
+  }, [state.error]);
 
   const passwordChecks = useMemo(() => {
     const lenOk = password.length >= 8;
@@ -64,7 +70,7 @@ export function RegisterForm() {
         <div className="flex-grow border-t border-slate-300" />
       </div>
 
-      <form action={registerAction} className="space-y-3.5">
+      <form action={formAction} className="space-y-3.5">
         <div>
           <label className="block text-xs font-bold tracking-widest text-[#464553] mb-2" htmlFor="name">
             Full name
@@ -143,8 +149,9 @@ export function RegisterForm() {
         <button
           className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold"
           type="submit"
+          disabled={isPending}
         >
-          Create account
+          {isPending ? "Checking..." : "Create account"}
         </button>
       </form>
 

@@ -16,6 +16,7 @@ export interface Topic {
   description: string;
   premium: boolean;
   editorIds: string[];
+  questionCount?: number;
   weakForUsers?: string[];
 }
 
@@ -40,7 +41,9 @@ export interface Test {
   title: string;
   topicIds: string[];
   questionIds: string[];
+  questionCount?: number;
   durationMinutes: number;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
   premium: boolean;
 }
 

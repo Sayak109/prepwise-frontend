@@ -1,3 +1,7 @@
+"use client";
+
+import { useActionState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { loginAction } from "@/app/actions/auth";
 
 function GoogleIcon() {
@@ -42,6 +46,12 @@ function AppleIcon() {
 }
 
 export function LoginForm() {
+  const [state, formAction, isPending] = useActionState(loginAction, {});
+
+  useEffect(() => {
+    if (state.error) toast.error(state.error);
+  }, [state.error]);
+
   return (
     <div className="w-full max-w-[440px] px-8 py-8">
       <div className="text-center mb-6">
@@ -76,7 +86,7 @@ export function LoginForm() {
         <div className="flex-grow border-t border-slate-300" />
       </div>
 
-      <form action={loginAction} className="space-y-4.5">
+      <form action={formAction} className="space-y-4.5">
         <div>
           <label
             className="block text-xs font-bold tracking-widest text-[#464553] mb-2"
@@ -94,11 +104,29 @@ export function LoginForm() {
           />
         </div>
 
+        <div>
+          <label
+            className="block text-xs font-bold tracking-widest text-[#464553] mb-2"
+            htmlFor="password"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            placeholder="Password"
+            type="password"
+            required
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#1f108e] focus:border-[#1f108e] outline-none transition-all duration-200"
+          />
+        </div>
+
         <button
           className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold"
           type="submit"
+          disabled={isPending}
         >
-          Continue
+          {isPending ? "Checking..." : "Continue"}
         </button>
       </form>
     </div>

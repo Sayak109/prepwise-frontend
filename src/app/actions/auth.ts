@@ -1,16 +1,161 @@
 "use server";
+import axios from "axios";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { AUTH_COOKIE, FLASH_COOKIE, REFRESH_COOKIE, ROLE_COOKIE, USER_COOKIE } from "@/lib/constants";
+import { decryptFromBackend, encryptForBackend } from "@/lib/server-crypto";
+import type { AuthResponse, User } from "@/types";
 
-export async function loginAction(formData: FormData) {
-  // Auth disabled: keep page for future backend wiring.
-  void formData;
+type BackendEncryptedResponse = { data: string };
+type BackendApiResponse<T> = { success: boolean; message: string; data: T };
+export type AuthActionState = { error?: string };
+type CheckUserResponse = {
+  isRegistered: boolean;
+  isAdmin: boolean;
+  isStudent: boolean;
+  isEditor: boolean;
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+
+function normalizeUser(user: any): User {
+  return {
+    id: user.id,
+    name: user.name ?? [user.firstName, user.lastName].filter(Boolean).join(" ") ?? user.email,
+    email: user.email,
+    role: user.role,
+    premium: Boolean(user.premium),
+  };
+}
+
+export async function persistSession(auth: AuthResponse) {
+  const cookieStore = await cookies();
+  const options = {
+    path: "/",
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 7,
+  };
+
+  cookieStore.set(AUTH_COOKIE, auth.token, options);
+  cookieStore.set(REFRESH_COOKIE, auth.refreshToken, options);
+  cookieStore.set(ROLE_COOKIE, auth.user.role, options);
+  cookieStore.set(USER_COOKIE, JSON.stringify(auth.user), options);
+}
+
+export async function clearAuthCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_COOKIE);
+  cookieStore.delete(REFRESH_COOKIE);
+  cookieStore.delete(ROLE_COOKIE);
+  cookieStore.delete(USER_COOKIE);
+}
+
+async function setFlashToast(type: "success" | "error", message: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(FLASH_COOKIE, JSON.stringify({ type, message }), {
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60,
+  });
+}
+
+async function fetchCurrentUser(token: string) {
+  const response = await axios.get<BackendApiResponse<any>>(`${API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return normalizeUser(response.data.data);
+}
+
+function getAxiosMessage(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (Array.isArray(message)) return message.join(", ");
+    if (typeof message === "string") return message;
+  }
+  return "Something went wrong. Please try again.";
+}
+
+async function checkUser(email: string) {
+  const encryptedPayload = encryptForBackend({ email });
+  const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/check`, {
+    data: encryptedPayload,
+  });
+  const check = decryptFromBackend<BackendApiResponse<CheckUserResponse>>(response.data.data);
+  return check.data;
+}
+
+export async function loginAction(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const check = await checkUser(email);
+
+  if (!check.isRegistered) {
+    return { error: "Account not found. Please register first." };
+  }
+
+  const encryptedPayload = encryptForBackend({
+    auth_method: "EMAIL_PW",
+    email,
+    password,
+  });
+
+  try {
+    const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/login`, {
+      data: encryptedPayload,
+    });
+    const authResponse = decryptFromBackend<BackendApiResponse<{ accessToken: string; refreshToken: string }>>(response.data.data);
+    const user = await fetchCurrentUser(authResponse.data.accessToken);
+
+    await persistSession({
+      token: authResponse.data.accessToken,
+      refreshToken: authResponse.data.refreshToken,
+      user,
+    });
+    await setFlashToast("success", "Login successful.");
+  } catch (error) {
+    return { error: getAxiosMessage(error) };
+  }
   redirect("/dashboard");
 }
-export async function registerAction(formData: FormData) {
-  // Auth disabled: keep page for future backend wiring.
-  void formData;
+export async function registerAction(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const name = String(formData.get("name") ?? "");
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const check = await checkUser(email);
+
+  if (check.isRegistered) {
+    return { error: "Account already exists. Please login." };
+  }
+
+  const encryptedPayload = encryptForBackend({
+    name,
+    email,
+    password,
+    role: "STUDENT",
+  });
+
+  try {
+    const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/register`, {
+      data: encryptedPayload,
+    });
+    const authResponse = decryptFromBackend<BackendApiResponse<{ accessToken: string; refreshToken: string }>>(response.data.data);
+    const user = await fetchCurrentUser(authResponse.data.accessToken);
+
+    await persistSession({
+      token: authResponse.data.accessToken,
+      refreshToken: authResponse.data.refreshToken,
+      user,
+    });
+    await setFlashToast("success", "Account created successfully.");
+  } catch (error) {
+    return { error: getAxiosMessage(error) };
+  }
   redirect("/dashboard");
 }
 export async function logoutAction() {
-  redirect("/dashboard");
+  await clearAuthCookies();
+  await setFlashToast("success", "Logged out successfully.");
+  redirect("/login");
 }

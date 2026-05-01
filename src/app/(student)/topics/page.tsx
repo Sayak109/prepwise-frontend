@@ -1,11 +1,19 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GraduationCap, MoreVertical, Search, Timer } from "lucide-react";
 import { useTopics } from "@/hooks/use-topics";
 
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { AppFooter } from "@/components/layout/app-footer";
+import {
+  formatTopicTime,
+  getTopicProgress,
+  readTopicProgress,
+  topicMasteryPercent,
+  TOPIC_PROGRESS_EVENT,
+  type TopicProgressMap,
+} from "@/lib/topic-progress";
 import styles from "@/app/(student)/topics/topics-exploration.module.css";
 
 const imagesByTopicId: Record<string, string> = {
@@ -21,22 +29,28 @@ const imagesByTopicId: Record<string, string> = {
     "https://images.unsplash.com/photo-1456519671631-5d8f0bb8efca?auto=format&fit=crop&w=900&q=80",
 };
 
-function computeMockStats(topicId: string, idx: number) {
-  const mastery = ((idx + topicId.length * 7) * 17) % 100; // deterministic 0-99
-  const questions = 250 + mastery * 10;
-  const hours = Math.round((mastery / 100) * 28 + idx * 2);
-  const level =
-    mastery >= 70 ? "Advanced" : mastery >= 40 ? "Core" : "Fundamental";
-  const labelColor =
-    level === "Advanced" ? "advanced" : level === "Fundamental" ? "fundamental" : "core";
-
-  return { mastery, questions, hours, level, labelColor };
+function masteryLevel(mastery: number) {
+  if (mastery >= 70) return { level: "Advanced", labelColor: "advanced" };
+  if (mastery >= 30) return { level: "Core", labelColor: "core" };
+  return { level: "Fundamental", labelColor: "fundamental" };
 }
 
 export default function TopicsPage() {
   const { data, isLoading } = useTopics();
 
   const [query, setQuery] = useState("");
+  const [progress, setProgress] = useState<TopicProgressMap>({});
+
+  useEffect(() => {
+    setProgress(readTopicProgress());
+    const handleProgress = () => setProgress(readTopicProgress());
+    window.addEventListener(TOPIC_PROGRESS_EVENT, handleProgress);
+    window.addEventListener("storage", handleProgress);
+    return () => {
+      window.removeEventListener(TOPIC_PROGRESS_EVENT, handleProgress);
+      window.removeEventListener("storage", handleProgress);
+    };
+  }, []);
 
   const filteredTopics = useMemo(() => {
     const list = data ?? [];
@@ -87,9 +101,14 @@ export default function TopicsPage() {
         ) : null}
 
         <section className={styles.grid} aria-label="Topic library">
-          {filteredTopics.map((topic, idx) => {
-            const stats = computeMockStats(topic.id, idx);
-            const masteryPct = Math.max(0, Math.min(99, stats.mastery));
+          {filteredTopics.map((topic) => {
+            const topicProgress = getTopicProgress(topic.id, progress);
+            const questionCount = topic.questionCount ?? 0;
+            const masteryPct = topicMasteryPercent(
+              topicProgress.solvedQuestionIds.length,
+              questionCount,
+            );
+            const stats = masteryLevel(masteryPct);
             const ctaLabel = masteryPct >= 85 ? "Review Results" : "Start Practice";
 
             return (
@@ -134,11 +153,11 @@ export default function TopicsPage() {
                 <div className={styles.metaRow}>
                   <span className={styles.metaItem}>
                     <GraduationCap size={16} />
-                    {Math.round(stats.questions / 10) * 10} Questions
+                    {questionCount} Questions
                   </span>
                   <span className={styles.metaItem}>
                     <Timer size={16} />
-                    {stats.hours}h spent
+                    {formatTopicTime(topicProgress.timeSpentSeconds)} spent
                   </span>
                 </div>
 
