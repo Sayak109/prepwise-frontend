@@ -6,10 +6,10 @@ import {
   ArrowRight,
   Bookmark,
   CheckCircle2,
-  Clock3,
   Flag,
   Home,
   Lightbulb,
+  NotebookPen,
   Timer,
   Trophy,
   X,
@@ -22,6 +22,16 @@ import styles from "@/components/practice/practice-session.module.css";
 
 function normalize(s: string) {
   return s.trim().toLowerCase();
+}
+
+function answerMatches(question: Question, answer: string) {
+  const normalizedAnswer = normalize(answer);
+  const normalizedCorrectAnswer = normalize(question.answer);
+  if (!normalizedCorrectAnswer) return false;
+  if (question.type === "DESCRIPTIVE") {
+    return normalizedAnswer.includes(normalizedCorrectAnswer);
+  }
+  return normalizedAnswer === normalizedCorrectAnswer;
 }
 
 export function PracticeSession({
@@ -45,15 +55,50 @@ export function PracticeSession({
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    if (!topicId) return;
-    const interval = window.setInterval(() => addTopicTime(topicId, 5), 5000);
-    return () => window.clearInterval(interval);
-  }, [topicId]);
+    if (!topicId || !questions.length) return;
 
-  useEffect(() => {
-    if (!topicId || !submitted || !q) return;
-    markTopicQuestionSolved(topicId, q.id);
-  }, [topicId, submitted, q]);
+    let lastTickAt = Date.now();
+    let pendingSeconds = 0;
+    let wasActive =
+      document.visibilityState === "visible" && document.hasFocus();
+
+    const flushTime = () => {
+      const wholeSeconds = Math.floor(pendingSeconds);
+      if (!wholeSeconds) return;
+      addTopicTime(topicId, wholeSeconds);
+      pendingSeconds -= wholeSeconds;
+    };
+
+    const tick = () => {
+      const now = Date.now();
+      if (wasActive) pendingSeconds += (now - lastTickAt) / 1000;
+      lastTickAt = now;
+      wasActive =
+        document.visibilityState === "visible" && document.hasFocus();
+      if (pendingSeconds >= 10) flushTime();
+    };
+
+    const handleActivityChange = () => {
+      tick();
+      flushTime();
+    };
+
+    const interval = window.setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", handleActivityChange);
+    window.addEventListener("blur", handleActivityChange);
+    window.addEventListener("focus", handleActivityChange);
+    window.addEventListener("beforeunload", handleActivityChange);
+
+    return () => {
+      tick();
+      flushTime();
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleActivityChange);
+      window.removeEventListener("blur", handleActivityChange);
+      window.removeEventListener("focus", handleActivityChange);
+      window.removeEventListener("beforeunload", handleActivityChange);
+    };
+  }, [topicId, questions.length]);
 
   const isAnswered = useMemo(() => {
     if (!q) return false;
@@ -63,18 +108,15 @@ export function PracticeSession({
   }, [q, mcqAnswer, shortAnswer, descriptive]);
 
   const evaluation = useMemo(() => {
-    if (!submitted || !q) return null;
-    if (q.type === "MCQ") {
-      const correct = normalize(mcqAnswer) === normalize(q.answer);
-      return { correct };
-    }
-    if (q.type === "SHORT_ANSWER") {
-      const correct = normalize(shortAnswer) === normalize(q.answer);
-      return { correct };
-    }
-    const correct = normalize(descriptive).includes(normalize(q.answer));
-    return { correct };
-  }, [submitted, q, mcqAnswer, shortAnswer, descriptive]);
+    if (!q) return null;
+    const answer =
+      q.type === "MCQ"
+        ? mcqAnswer
+        : q.type === "SHORT_ANSWER"
+          ? shortAnswer
+          : descriptive;
+    return { correct: answerMatches(q, answer) };
+  }, [q, mcqAnswer, shortAnswer, descriptive]);
 
   function resetForNext(nextIndex: number) {
     setActiveIndex(nextIndex);
@@ -84,6 +126,26 @@ export function PracticeSession({
     setDescriptive("");
     setShowExplanation(false);
     setNotesOpen(false);
+  }
+
+  function submitAnswer() {
+    if (!topicId || !q || !isAnswered) return;
+    setSubmitted(true);
+    setShowExplanation(answerMatches(
+      q,
+      q.type === "MCQ"
+        ? mcqAnswer
+        : q.type === "SHORT_ANSWER"
+          ? shortAnswer
+          : descriptive,
+    ));
+    setNotesOpen(false);
+    markTopicQuestionSolved(topicId, q.id);
+  }
+
+  function moveToNextQuestion() {
+    if (isAnswered) submitAnswer();
+    resetForNext(Math.min(questions.length - 1, activeIndex + 1));
   }
 
   const masteryPct = Math.round(
@@ -99,14 +161,10 @@ export function PracticeSession({
         <div className={styles.progressBlock}>
           <div className={styles.progressTop}>
             <div>
-              <span className={styles.goalLabel}>DAILY GOAL</span>
+              <span className={styles.goalLabel}>{topicTitle}</span>
               <h3 className={styles.goalValue}>
-                {Math.min(20, activeIndex + 1)} / 20 Questions
+                Question {activeIndex + 1} of {questions.length}
               </h3>
-            </div>
-            <div className={styles.timerRow}>
-              <Clock3 size={20} />
-              <span className={styles.timerText}>14:22</span>
             </div>
           </div>
           <div className={styles.progressTrack}>
@@ -132,17 +190,6 @@ export function PracticeSession({
               </div>
 
               <h1 className={styles.prompt}>{q.prompt}</h1>
-
-              <div className={styles.imagePlaceholder} aria-hidden="true">
-                <div className={styles.practiceIllustration}>
-                  <span className={styles.railLine} />
-                  <span className={styles.trainBody}>
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                </div>
-              </div>
             </div>
 
             <div className={styles.optionsGrid}>
@@ -169,8 +216,8 @@ export function PracticeSession({
                         } ${stateClass}`}
                         onClick={() => {
                           setMcqAnswer(opt.value);
-                          setSubmitted(true);
-                          setShowExplanation(isRightOption);
+                          setSubmitted(false);
+                          setShowExplanation(false);
                           setNotesOpen(false);
                         }}
                       >
@@ -204,23 +251,12 @@ export function PracticeSession({
                     className={styles.input}
                     value={shortAnswer}
                     placeholder="Type your exact answer"
-                    onChange={(e) => setShortAnswer(e.target.value)}
+                    onChange={(e) => {
+                      setShortAnswer(e.target.value);
+                      setSubmitted(false);
+                      setShowExplanation(false);
+                    }}
                   />
-                  <div className={styles.shortActions}>
-                    <button
-                      type="button"
-                      className={styles.checkBtn}
-                      onClick={() => {
-                        setSubmitted(true);
-                        const correct = normalize(shortAnswer) === normalize(q.answer);
-                        setShowExplanation(correct);
-                        setNotesOpen(false);
-                      }}
-                      disabled={!shortAnswer.trim()}
-                    >
-                      Submit
-                    </button>
-                  </div>
                 </div>
               ) : null}
 
@@ -231,25 +267,34 @@ export function PracticeSession({
                     rows={6}
                     value={descriptive}
                     placeholder="Write your descriptive answer"
-                    onChange={(e) => setDescriptive(e.target.value)}
+                    onChange={(e) => {
+                      setDescriptive(e.target.value);
+                      setSubmitted(false);
+                      setShowExplanation(false);
+                    }}
                   />
-                  <div className={styles.shortActions}>
-                    <button
-                      type="button"
-                      className={styles.checkBtn}
-                      onClick={() => {
-                        setSubmitted(true);
-                        const correct = normalize(descriptive).includes(normalize(q.answer));
-                        setShowExplanation(correct);
-                        setNotesOpen(false);
-                      }}
-                      disabled={!descriptive.trim()}
-                    >
-                      Submit
-                    </button>
-                  </div>
                 </div>
               ) : null}
+            </div>
+
+            <div className={styles.answerActions}>
+              <button
+                type="button"
+                className={styles.checkBtn}
+                onClick={submitAnswer}
+                disabled={!isAnswered || submitted}
+              >
+                {submitted ? "Submitted" : "Submit"}
+              </button>
+              <button
+                type="button"
+                className={styles.nextBtn}
+                onClick={moveToNextQuestion}
+                disabled={activeIndex >= questions.length - 1}
+              >
+                Next
+                <ArrowRight size={20} aria-hidden="true" />
+              </button>
             </div>
 
             <div className={styles.utilityRow}>
@@ -257,22 +302,20 @@ export function PracticeSession({
                 type="button"
                 className={styles.utilBtn}
                 onClick={() => {
-                  // Only show explanation when the answer is correct.
-                  if (!submitted) return;
-                  if (!evaluation?.correct) {
-                    setShowExplanation(false);
-                    return;
-                  }
                   setShowExplanation((v) => !v);
                 }}
+                aria-pressed={showExplanation}
               >
+                <Lightbulb size={16} aria-hidden="true" />
                 Show explanation
               </button>
               <button
                 type="button"
                 className={styles.utilBtn}
                 onClick={() => setNotesOpen((v) => !v)}
+                aria-pressed={notesOpen}
               >
+                <NotebookPen size={16} aria-hidden="true" />
                 Write note
               </button>
             </div>
@@ -289,7 +332,7 @@ export function PracticeSession({
               </div>
             ) : null}
 
-            {submitted && showExplanation ? (
+            {showExplanation ? (
               <div className={styles.explanationCard}>
                 <div className={styles.explHead}>
                   <Lightbulb size={24} className={styles.lightbulb} />
@@ -339,11 +382,7 @@ export function PracticeSession({
                     type="button"
                     className={styles.nextBtn}
                     disabled={activeIndex >= questions.length - 1}
-                    onClick={() =>
-                      resetForNext(
-                        Math.min(questions.length - 1, activeIndex + 1),
-                      )
-                    }
+                    onClick={moveToNextQuestion}
                   >
                     Next Question
                     <ArrowRight size={20} aria-hidden="true" />

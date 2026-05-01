@@ -53,7 +53,8 @@ export function markTopicQuestionSolved(topicId: string, questionId: string) {
 }
 
 export function addTopicTime(topicId: string, seconds: number) {
-  if (seconds <= 0) return;
+  const wholeSeconds = Math.floor(seconds);
+  if (wholeSeconds <= 0) return;
   const progress = readTopicProgress();
   const current = getTopicProgress(topicId, progress);
 
@@ -61,13 +62,14 @@ export function addTopicTime(topicId: string, seconds: number) {
     ...progress,
     [topicId]: {
       ...current,
-      timeSpentSeconds: current.timeSpentSeconds + seconds,
+      timeSpentSeconds: current.timeSpentSeconds + wholeSeconds,
     },
   });
 }
 
 export function formatTopicTime(seconds: number) {
-  if (seconds < 60) return "0m";
+  if (seconds <= 0) return "No time yet";
+  if (seconds < 60) return "<1m";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
@@ -77,5 +79,11 @@ export function formatTopicTime(seconds: number) {
 
 export function topicMasteryPercent(solvedCount: number, questionCount: number) {
   if (!questionCount) return 0;
-  return Math.min(100, Math.round((solvedCount / questionCount) * 100));
+  const safeSolvedCount = Math.min(Math.max(solvedCount, 0), questionCount);
+  return Math.round((safeSolvedCount / questionCount) * 100);
+}
+
+export function topicSolvedCount(solvedQuestionIds: string[], questionCount: number) {
+  if (!questionCount) return 0;
+  return Math.min(new Set(solvedQuestionIds).size, questionCount);
 }

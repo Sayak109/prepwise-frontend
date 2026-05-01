@@ -5,6 +5,12 @@ import { StudentLayout } from "@/components/layout/student-layout";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
+type PracticeTopicResponseItem = {
+  id: string;
+  title: string;
+  description?: string | null;
+};
+
 export default async function TopicDetailPage({ params }: { params: Promise<{ topicId: string }> }) {
   const { topicId } = await params;
   const response = await axios
@@ -13,7 +19,8 @@ export default async function TopicDetailPage({ params }: { params: Promise<{ to
     })
     .catch(() => null);
   if (!response) notFound();
-  const topic = response.data.data?.topics?.find((item: any) => item.id === topicId);
+  const topics = response.data.data?.topics as PracticeTopicResponseItem[] | undefined;
+  const topic = topics?.find((item) => item.id === topicId);
   if (!topic) notFound();
 
   return (

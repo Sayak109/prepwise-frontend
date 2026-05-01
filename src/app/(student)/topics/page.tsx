@@ -11,6 +11,7 @@ import {
   getTopicProgress,
   readTopicProgress,
   topicMasteryPercent,
+  topicSolvedCount,
   TOPIC_PROGRESS_EVENT,
   type TopicProgressMap,
 } from "@/lib/topic-progress";
@@ -39,10 +40,11 @@ export default function TopicsPage() {
   const { data, isLoading } = useTopics();
 
   const [query, setQuery] = useState("");
-  const [progress, setProgress] = useState<TopicProgressMap>({});
+  const [progress, setProgress] = useState<TopicProgressMap>(() =>
+    readTopicProgress(),
+  );
 
   useEffect(() => {
-    setProgress(readTopicProgress());
     const handleProgress = () => setProgress(readTopicProgress());
     window.addEventListener(TOPIC_PROGRESS_EVENT, handleProgress);
     window.addEventListener("storage", handleProgress);
@@ -104,10 +106,11 @@ export default function TopicsPage() {
           {filteredTopics.map((topic) => {
             const topicProgress = getTopicProgress(topic.id, progress);
             const questionCount = topic.questionCount ?? 0;
-            const masteryPct = topicMasteryPercent(
-              topicProgress.solvedQuestionIds.length,
+            const solvedCount = topicSolvedCount(
+              topicProgress.solvedQuestionIds,
               questionCount,
             );
+            const masteryPct = topicMasteryPercent(solvedCount, questionCount);
             const stats = masteryLevel(masteryPct);
             const ctaLabel = masteryPct >= 85 ? "Review Results" : "Start Practice";
 
@@ -153,7 +156,7 @@ export default function TopicsPage() {
                 <div className={styles.metaRow}>
                   <span className={styles.metaItem}>
                     <GraduationCap size={16} />
-                    {questionCount} Questions
+                    {questionCount} {questionCount === 1 ? "Question" : "Questions"}
                   </span>
                   <span className={styles.metaItem}>
                     <Timer size={16} />
