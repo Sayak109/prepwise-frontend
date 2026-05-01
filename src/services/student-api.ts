@@ -21,9 +21,11 @@ type BackendQuestion = {
   type: Question["type"];
   questionText: string;
   explanation?: string | null;
+  correctOptionId?: string | null;
   correctAnswer?: string | null;
   sampleAnswer?: string | null;
   options?: Array<{ id: string; optionText: string }>;
+  correctOption?: { id: string; optionText: string } | null;
 };
 
 type BackendTest = {
@@ -78,6 +80,17 @@ export function mapTopic(topic: BackendTopic): Topic {
 }
 
 export function mapQuestion(question: BackendQuestion): Question {
+  const correctFromOptions =
+    question.correctOptionId && question.options
+      ? question.options.find((o) => o.id === question.correctOptionId)?.optionText
+      : undefined;
+  const correctFromRelation = question.correctOption?.optionText ?? undefined;
+  const correct =
+    question.correctAnswer ??
+    correctFromOptions ??
+    correctFromRelation ??
+    "";
+
   return {
     id: question.id,
     topicId: question.topicId,
@@ -88,8 +101,8 @@ export function mapQuestion(question: BackendQuestion): Question {
       id: option.id,
       value: option.optionText,
     })),
-    answer: question.correctAnswer ?? "",
-    sampleAnswer: question.sampleAnswer ?? question.correctAnswer ?? "",
+    answer: correct,
+    sampleAnswer: question.sampleAnswer ?? correct,
   };
 }
 
@@ -168,7 +181,19 @@ export async function flagTestQuestion(attemptId: string, questionId: string, fl
 }
 
 export async function completeTestAttempt(attemptId: string) {
-  const response = await api.post<ApiResponse<Attempt>>(`/test/attempts/${attemptId}/complete`);
+  const response = await api.post<ApiResponse<Attempt>>(`/test/attempts/${attemptId}/complete`, {
+    answers: [],
+  });
+  return unwrap(response);
+}
+
+export async function completeTestAttemptWithAnswers(
+  attemptId: string,
+  answers: Array<{ questionId: string; selectedOptionId?: string; answerText?: string }>,
+) {
+  const response = await api.post<ApiResponse<Attempt>>(`/test/attempts/${attemptId}/complete`, {
+    answers,
+  });
   return unwrap(response);
 }
 

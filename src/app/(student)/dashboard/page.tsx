@@ -6,7 +6,10 @@ import { fetchDashboard } from "@/services/server-student-api";
 import { getSession } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  const [session, dashboard] = await Promise.all([getSession(), fetchDashboard()]);
+  const [session, dashboard] = await Promise.all([
+    getSession(),
+    fetchDashboard(),
+  ]);
   const activeUser = session.user;
   const recent = dashboard.recentAttempts.slice(0, 3);
   const testsCompleted = dashboard.stats.testsCompleted;
@@ -20,7 +23,10 @@ export default async function DashboardPage() {
       <div className={styles.wrap}>
         <header className={styles.hero}>
           <h1>Good morning, {activeUser?.name ?? "Student"}.</h1>
-          <p>You&apos;re making great progress. Ready to tackle today&apos;s goals?</p>
+          <p>
+            You&apos;re making great progress. Ready to tackle today&apos;s
+            goals?
+          </p>
         </header>
 
         <section className={styles.metrics} aria-label="Core metrics">
@@ -31,20 +37,23 @@ export default async function DashboardPage() {
               <span className={styles.unit}>%</span>
             </div>
             <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${overallScore}%` }} />
+              <div
+                className={styles.progressFill}
+                style={{ width: `${overallScore}%` }}
+              />
             </div>
           </article>
 
           <article className={styles.card}>
-            <p className={styles.label}>Tests Completed</p>
+            <p className={styles.label}>Mock Tests Given</p>
             <div className={styles.valueRow}>
               <span className={styles.valueNeutral}>{testsCompleted}</span>
               <span className={styles.unit}>/ {testsGoal}</span>
             </div>
-            <div className={styles.subRow}>
+            {/* <div className={styles.subRow}>
               <Sigma size={16} color="#1f108e" />
               <span>{testsPct}% of goal</span>
-            </div>
+            </div> */}
           </article>
 
           <article className={styles.card}>
@@ -60,20 +69,20 @@ export default async function DashboardPage() {
           </article>
         </section>
 
-        <section className={styles.recommend} aria-label="Recommended goal">
+        <section className={styles.recommend} aria-label="Recommended">
           <div className={styles.recImg}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt="Recommended topic"
-              src="https://images.unsplash.com/photo-1532635224-8fe0b757fb13?auto=format&fit=crop&w=1400&q=80"
+              src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1400&q=80"
             />
           </div>
           <div className={styles.recBody}>
-            <span className={styles.pill}>Recommended Goal</span>
+            <span className={styles.pill}>Recommended</span>
             <h2>Master your next weak topic</h2>
             <p>
-              Based on your recent practice, focusing on this topic can boost your score by an
-              estimated 5%.
+              Based on your recent practice, focusing on this topic can boost
+              your score by an estimated 5%.
             </p>
             <div className={styles.recActions}>
               <Link className={styles.primaryBtn} href="/topics">
@@ -87,17 +96,26 @@ export default async function DashboardPage() {
         <section aria-label="Recent attempts">
           <div className={styles.sectionHead}>
             <h3>Recent Attempts</h3>
-            <button className={styles.linkBtn} type="button">
+            {/* <button className={styles.linkBtn} type="button">
               View All History
-            </button>
+            </button> */}
           </div>
 
           <div className={styles.attempts}>
             {recent.map((a) => {
               const pct = a.scorePercent;
-              const status = pct >= 85 ? "Mastered" : a.result === "PASSED" ? "Passed" : "Incomplete";
+              const status =
+                pct >= 85
+                  ? "Mastered"
+                  : a.result === "PASSED"
+                    ? "Passed"
+                    : "Incomplete";
               const statusClass =
-                status === "Passed" ? styles.passed : status === "Mastered" ? styles.mastered : styles.incomplete;
+                status === "Passed"
+                  ? styles.passed
+                  : status === "Mastered"
+                    ? styles.mastered
+                    : styles.incomplete;
 
               return (
                 <article key={a.id} className={styles.attemptItem}>
@@ -113,7 +131,9 @@ export default async function DashboardPage() {
 
                   <div className={styles.attemptRight}>
                     <p className={styles.attemptScore}>{pct}%</p>
-                    <span className={`${styles.statusPill} ${statusClass}`}>{status}</span>
+                    <span className={`${styles.statusPill} ${statusClass}`}>
+                      {status}
+                    </span>
                   </div>
                 </article>
               );

@@ -155,7 +155,24 @@ export async function registerAction(_prevState: AuthActionState, formData: Form
   redirect("/dashboard");
 }
 export async function logoutAction() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE)?.value;
+
+  if (token) {
+    try {
+      await axios.post(
+        `${API_URL}/auth/logout`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+    } catch {
+      // Even if backend logout fails, clear local session.
+    }
+  }
+
   await clearAuthCookies();
   await setFlashToast("success", "Logged out successfully.");
-  redirect("/login");
+  redirect("/topic");
 }

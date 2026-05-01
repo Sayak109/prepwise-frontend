@@ -5,11 +5,12 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bookmark,
-  CheckCircle2,
+  Check,
   Flag,
   Home,
   Lightbulb,
   NotebookPen,
+  ArrowLeft,
   Timer,
   Trophy,
   X,
@@ -34,6 +35,24 @@ function answerMatches(question: Question, answer: string) {
   return normalizedAnswer === normalizedCorrectAnswer;
 }
 
+function sanitizeHtml(html: string) {
+  // Browser-only: this component is client-side.
+  const doc = new DOMParser().parseFromString(html ?? "", "text/html");
+  doc.querySelectorAll("script, style, iframe, object, embed").forEach((n) => n.remove());
+  doc.querySelectorAll("*").forEach((el) => {
+    // strip inline event handlers like onclick=
+    [...el.attributes].forEach((attr) => {
+      if (attr.name.toLowerCase().startsWith("on")) el.removeAttribute(attr.name);
+    });
+  });
+  return doc.body.innerHTML;
+}
+
+function HtmlBlock({ html }: { html: string }) {
+  const safe = useMemo(() => sanitizeHtml(html), [html]);
+  return <div dangerouslySetInnerHTML={{ __html: safe }} />;
+}
+
 export function PracticeSession({
   topicId,
   topicTitle,
@@ -46,13 +65,27 @@ export function PracticeSession({
   const [activeIndex, setActiveIndex] = useState(0);
   const q = questions[activeIndex];
 
-  const [mcqAnswer, setMcqAnswer] = useState<string>("");
-  const [shortAnswer, setShortAnswer] = useState<string>("");
-  const [descriptive, setDescriptive] = useState<string>("");
-  const [submitted, setSubmitted] = useState(false);
+  const [answersByQuestionId, setAnswersByQuestionId] = useState<
+    Record<
+      string,
+      {
+        mcqAnswer?: string;
+        shortAnswer?: string;
+        descriptive?: string;
+        revealed?: boolean;
+        showExplanation?: boolean;
+      }
+    >
+  >({});
   const [showExplanation, setShowExplanation] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState("");
+
+  const currentState = q ? answersByQuestionId[q.id] : undefined;
+  const mcqAnswer = currentState?.mcqAnswer ?? "";
+  const shortAnswer = currentState?.shortAnswer ?? "";
+  const descriptive = currentState?.descriptive ?? "";
+  const revealed = Boolean(currentState?.revealed);
 
   useEffect(() => {
     if (!topicId || !questions.length) return;
@@ -118,34 +151,43 @@ export function PracticeSession({
     return { correct: answerMatches(q, answer) };
   }, [q, mcqAnswer, shortAnswer, descriptive]);
 
-  function resetForNext(nextIndex: number) {
-    setActiveIndex(nextIndex);
-    setSubmitted(false);
-    setMcqAnswer("");
-    setShortAnswer("");
-    setDescriptive("");
-    setShowExplanation(false);
+  useEffect(() => {
+    // When switching active question, restore its explanation state.
+    if (!q) return;
+    setShowExplanation(Boolean(answersByQuestionId[q.id]?.showExplanation));
     setNotesOpen(false);
-  }
+  }, [q?.id, answersByQuestionId]);
 
   function submitAnswer() {
     if (!topicId || !q || !isAnswered) return;
-    setSubmitted(true);
-    setShowExplanation(answerMatches(
+    const isCorrect = answerMatches(
       q,
       q.type === "MCQ"
         ? mcqAnswer
         : q.type === "SHORT_ANSWER"
           ? shortAnswer
           : descriptive,
-    ));
+    );
+    setAnswersByQuestionId((prev) => ({
+      ...prev,
+      [q.id]: {
+        ...(prev[q.id] ?? {}),
+        revealed: true,
+        // Auto-open explanation only when correct (per requirement)
+        showExplanation: (prev[q.id]?.showExplanation ?? false) || isCorrect,
+      },
+    }));
+    if (isCorrect) setShowExplanation(true);
     setNotesOpen(false);
-    markTopicQuestionSolved(topicId, q.id);
+    if (isCorrect) markTopicQuestionSolved(topicId, q.id);
   }
 
   function moveToNextQuestion() {
-    if (isAnswered) submitAnswer();
-    resetForNext(Math.min(questions.length - 1, activeIndex + 1));
+    setActiveIndex(Math.min(questions.length - 1, activeIndex + 1));
+  }
+
+  function moveToPrevQuestion() {
+    setActiveIndex(Math.max(0, activeIndex - 1));
   }
 
   const masteryPct = Math.round(
@@ -198,15 +240,22 @@ export function PracticeSession({
                   {q.options?.map((opt, idx) => {
                     const checked = mcqAnswer === opt.value;
                     const letter = String.fromCharCode(65 + idx);
-                    const showCheck = submitted && checked;
                     const isRightOption =
                       normalize(opt.value) === normalize(q.answer);
-                    const stateClass =
-                      submitted && checked
-                        ? isRightOption
-                          ? styles.optionCorrect
-                          : styles.optionWrong
-                        : "";
+
+                    // Do NOT reveal the right option on wrong selection.
+                    // Only show "correct" state if the user selected the correct option.
+                    const stateClass = revealed
+                      ? checked && isRightOption
+                        ? styles.optionCorrect
+                        : checked
+                          ? styles.optionWrong
+                          : ""
+                      : "";
+
+                    const showRightIcon = revealed && checked && isRightOption;
+                    const showWrongIcon = revealed && checked && !isRightOption;
+                    const showSelectedIcon = !revealed && checked;
                     return (
                       <button
                         key={opt.id}
@@ -215,9 +264,25 @@ export function PracticeSession({
                           checked ? styles.optionSelected : ""
                         } ${stateClass}`}
                         onClick={() => {
-                          setMcqAnswer(opt.value);
-                          setSubmitted(false);
-                          setShowExplanation(false);
+                          if (!q) return;
+                          const nextAnswer = opt.value;
+                          const isCorrect = answerMatches(q, nextAnswer);
+                          setAnswersByQuestionId((prev) => ({
+                            ...prev,
+                            [q.id]: {
+                              ...(prev[q.id] ?? {}),
+                              mcqAnswer: nextAnswer,
+                              revealed: true,
+                              // if explanation already open, keep it open until user hides it
+                              showExplanation:
+                                (prev[q.id]?.showExplanation ?? false) ||
+                                isCorrect,
+                            },
+                          }));
+                          if (isCorrect) {
+                            setShowExplanation(true);
+                            markTopicQuestionSolved(topicId, q.id);
+                          }
                           setNotesOpen(false);
                         }}
                       >
@@ -229,14 +294,26 @@ export function PracticeSession({
                           {letter}
                         </span>
                         <span className={styles.optionText}>{opt.value}</span>
-                        {showCheck ? (
+                        {showRightIcon ? (
                           <span
-                            className={`${styles.checkWrap} ${
-                              isRightOption ? styles.checkCorrect : styles.checkWrong
-                            }`}
+                            className={`${styles.checkWrap} ${styles.checkCorrect}`}
                             aria-hidden="true"
                           >
-                            {isRightOption ? <CheckCircle2 size={24} /> : <X size={22} />}
+                            <Check size={22} />
+                          </span>
+                        ) : showWrongIcon ? (
+                          <span
+                            className={`${styles.checkWrap} ${styles.checkWrong}`}
+                            aria-hidden="true"
+                          >
+                            <X size={22} />
+                          </span>
+                        ) : showSelectedIcon ? (
+                          <span
+                            className={`${styles.checkWrap} ${styles.checkSelected}`}
+                            aria-hidden="true"
+                          >
+                            <Check size={22} />
                           </span>
                         ) : null}
                       </button>
@@ -247,16 +324,45 @@ export function PracticeSession({
 
               {q.type === "SHORT_ANSWER" ? (
                 <div className={styles.shortWrap}>
-                  <input
-                    className={styles.input}
-                    value={shortAnswer}
-                    placeholder="Type your exact answer"
-                    onChange={(e) => {
-                      setShortAnswer(e.target.value);
-                      setSubmitted(false);
-                      setShowExplanation(false);
-                    }}
-                  />
+                  <div className={styles.inputWrap}>
+                    <input
+                      className={styles.input}
+                      value={shortAnswer}
+                      placeholder="Type your exact answer"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (!q) return;
+                        setAnswersByQuestionId((prev) => ({
+                          ...prev,
+                          [q.id]: {
+                            ...(prev[q.id] ?? {}),
+                            shortAnswer: value,
+                            // allow re-submit on edits
+                            revealed: false,
+                            showExplanation: false,
+                          },
+                        }));
+                        setShowExplanation(false);
+                      }}
+                    />
+                    {revealed && evaluation ? (
+                      evaluation.correct ? (
+                        <span
+                          className={`${styles.checkWrap} ${styles.inputCheckCorrect} ${styles.inputCheckIcon}`}
+                          aria-hidden="true"
+                        >
+                          <Check size={18} />
+                        </span>
+                      ) : (
+                        <span
+                          className={`${styles.checkWrap} ${styles.inputCheckWrong} ${styles.inputCheckIcon}`}
+                          aria-hidden="true"
+                        >
+                          <X size={18} />
+                        </span>
+                      )
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
 
@@ -268,8 +374,18 @@ export function PracticeSession({
                     value={descriptive}
                     placeholder="Write your descriptive answer"
                     onChange={(e) => {
-                      setDescriptive(e.target.value);
-                      setSubmitted(false);
+                      const value = e.target.value;
+                      if (!q) return;
+                      setAnswersByQuestionId((prev) => ({
+                        ...prev,
+                        [q.id]: {
+                          ...(prev[q.id] ?? {}),
+                          descriptive: value,
+                          // allow re-submit on edits
+                          revealed: false,
+                          showExplanation: false,
+                        },
+                      }));
                       setShowExplanation(false);
                     }}
                   />
@@ -280,12 +396,23 @@ export function PracticeSession({
             <div className={styles.answerActions}>
               <button
                 type="button"
-                className={styles.checkBtn}
-                onClick={submitAnswer}
-                disabled={!isAnswered || submitted}
+                className={styles.prevBtn}
+                onClick={moveToPrevQuestion}
+                disabled={activeIndex <= 0}
               >
-                {submitted ? "Submitted" : "Submit"}
+                <ArrowLeft size={20} aria-hidden="true" />
+                Previous
               </button>
+              {q?.type && q.type !== "MCQ" ? (
+                <button
+                  type="button"
+                  className={styles.checkBtn}
+                  onClick={submitAnswer}
+                  disabled={!isAnswered || revealed}
+                >
+                  {revealed ? "Submitted" : "Submit"}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={styles.nextBtn}
@@ -302,12 +429,20 @@ export function PracticeSession({
                 type="button"
                 className={styles.utilBtn}
                 onClick={() => {
-                  setShowExplanation((v) => !v);
+                  if (!q) return;
+                  setShowExplanation((v) => {
+                    const next = !v;
+                    setAnswersByQuestionId((prev) => ({
+                      ...prev,
+                      [q.id]: { ...(prev[q.id] ?? {}), showExplanation: next },
+                    }));
+                    return next;
+                  });
                 }}
                 aria-pressed={showExplanation}
               >
                 <Lightbulb size={16} aria-hidden="true" />
-                Show explanation
+                {showExplanation ? "Hide explanation" : "Show explanation"}
               </button>
               <button
                 type="button"
@@ -338,13 +473,13 @@ export function PracticeSession({
                   <Lightbulb size={24} className={styles.lightbulb} />
                   <h3>Explanation</h3>
                 </div>
-                <p>
+                <div className={styles.explanationBody}>
                   {q.type === "MCQ" ? (
                     <>
                       <span className={styles.correctText}>
                         {evaluation?.correct ? "Correct." : "Review."}
                       </span>{" "}
-                      {q.explanation}
+                      <HtmlBlock html={q.explanation} />
                     </>
                   ) : q.type === "SHORT_ANSWER" ? (
                     <>
@@ -360,7 +495,7 @@ export function PracticeSession({
                       Expected: <strong>{q.answer}</strong>
                       <br />
                       <br />
-                      {q.explanation}
+                      <HtmlBlock html={q.explanation} />
                     </>
                   ) : (
                     <>
@@ -369,10 +504,10 @@ export function PracticeSession({
                       <strong>{q.sampleAnswer ?? q.answer}</strong>
                       <br />
                       <br />
-                      {q.explanation}
+                      <HtmlBlock html={q.explanation} />
                     </>
                   )}
-                </p>
+                </div>
                 <div className={styles.bottomExplainActions}>
                   <button type="button" className={styles.saveBtn}>
                     <Bookmark size={16} />

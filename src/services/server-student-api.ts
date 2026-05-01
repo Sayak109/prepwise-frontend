@@ -50,6 +50,49 @@ async function get<T>(path: string) {
   }
 }
 
+export type TestAttempt = {
+  id: string;
+  testId: string;
+  score: string | number;
+  status: string;
+  timeRemainingSeconds?: number | null;
+  test: {
+    id: string;
+    title: string;
+    topicId?: string | null;
+    difficulty?: string | null;
+    isTimed?: boolean;
+    durationSeconds?: number | null;
+    isPremium?: boolean;
+  };
+  summary: {
+    totalQuestions: number;
+    answered: number;
+    flagged: number;
+    notVisited: number;
+  };
+  questions: Array<{
+    id: string;
+    topicId: string;
+    type: "MCQ" | "SHORT_ANSWER" | "DESCRIPTIVE";
+    questionText: string;
+    explanation?: string | null;
+    correctOptionId?: string | null;
+    correctAnswer?: string | null;
+    sampleAnswer?: string | null;
+    options?: Array<{ id: string; optionText: string; displayOrder: number }>;
+    selectedOptionId?: string | null;
+    answerText?: string | null;
+    state?: string;
+    points?: string | number;
+    displayOrder?: number;
+  }>;
+};
+
+export async function fetchTestAttempt(attemptId: string) {
+  return await get<TestAttempt>(`/test/attempts/${attemptId}`);
+}
+
 export type DashboardData = {
   stats: {
     overallScore: number;

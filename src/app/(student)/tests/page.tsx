@@ -13,7 +13,11 @@ import styles from "@/app/(student)/tests/tests-listing.module.css";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import type { Test } from "@/types";
 
-type DurationFilter = "UNDER_15" | "BETWEEN_15_30" | "BETWEEN_30_50" | "OVER_50";
+type DurationFilter =
+  | "UNDER_15"
+  | "BETWEEN_15_30"
+  | "BETWEEN_30_50"
+  | "OVER_50";
 
 const difficultyOptions: Array<{ label: string; value: Test["difficulty"] }> = [
   { label: "Beginner", value: "EASY" },
@@ -46,12 +50,17 @@ function durationMatches(duration: number, filter?: DurationFilter) {
 export default function TestsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [difficulty, setDifficulty] = useState<Test["difficulty"] | undefined>();
+  const [difficulty, setDifficulty] = useState<
+    Test["difficulty"] | undefined
+  >();
   const [duration, setDuration] = useState<DurationFilter | undefined>();
   const { data, isLoading } = useTests({ search: debouncedSearch, difficulty });
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    const timeout = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      350,
+    );
     return () => window.clearTimeout(timeout);
   }, [search]);
 
@@ -61,7 +70,7 @@ export default function TestsPage() {
         .map((test) => ({
           id: test.id,
           title: test.title,
-          category: test.premium ? "Premium" : "Practice",
+          category: test.premium ? "Premium" : "Mock Test",
           questions: test.questionCount ?? test.questionIds.length,
           duration: test.durationMinutes,
           level: difficultyLabel(test.difficulty),
@@ -130,7 +139,11 @@ export default function TestsPage() {
                 Premium (Pro)
               </label>
             </div>
-            <button className={styles.clearBtn} type="button" onClick={clearFilters}>
+            <button
+              className={styles.clearBtn}
+              type="button"
+              onClick={clearFilters}
+            >
               <SlidersHorizontal size={14} />
               Clear All Filters
             </button>
@@ -139,7 +152,7 @@ export default function TestsPage() {
 
         <main className={styles.main}>
           <div className={styles.headBlock}>
-            <h1>Available Exams</h1>
+            <h1>Available Mock Test</h1>
             <div className={styles.searchWrap}>
               <Search size={17} />
               <input

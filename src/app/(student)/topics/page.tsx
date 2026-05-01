@@ -70,20 +70,20 @@ export default function TopicsPage() {
 
       <main className={styles.main}>
         <header className={styles.hero}>
-          <h1>Subject Library</h1>
+          <h1 style={{ color: "#1f108e" }}>Welcome to PrepWise</h1>
           <p>
             Master every concept through structured topic exploration. Tracks
             your progress across various domains with real-time analytics.
           </p>
 
-          <div className={styles.heroActions}>
+          {/* <div className={styles.heroActions}>
             <button className={styles.secondaryBtn} type="button">
               <Sliders /> Filter
             </button>
             <Link className={styles.primaryBtn} href="/tests">
               New Test
             </Link>
-          </div>
+          </div> */}
         </header>
 
         <div className={styles.searchRow}>
@@ -98,9 +98,7 @@ export default function TopicsPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <p className={styles.loading}>Loading topics...</p>
-        ) : null}
+        {isLoading ? <p className={styles.loading}>Loading topics...</p> : null}
 
         <section className={styles.grid} aria-label="Topic library">
           {filteredTopics.map((topic) => {
@@ -112,7 +110,8 @@ export default function TopicsPage() {
             );
             const masteryPct = topicMasteryPercent(solvedCount, questionCount);
             const stats = masteryLevel(masteryPct);
-            const ctaLabel = masteryPct >= 85 ? "Review Results" : "Start Practice";
+            const ctaLabel =
+              masteryPct >= 85 ? "Review Results" : "Start Practice";
 
             return (
               <article key={topic.id} className={styles.card}>
@@ -156,7 +155,8 @@ export default function TopicsPage() {
                 <div className={styles.metaRow}>
                   <span className={styles.metaItem}>
                     <GraduationCap size={16} />
-                    {questionCount} {questionCount === 1 ? "Question" : "Questions"}
+                    {questionCount}{" "}
+                    {questionCount === 1 ? "Question" : "Questions"}
                   </span>
                   <span className={styles.metaItem}>
                     <Timer size={16} />
@@ -170,7 +170,10 @@ export default function TopicsPage() {
                       {ctaLabel}
                     </Link>
                   ) : (
-                    <Link className={styles.primaryBtnFull} href={`/practice/${topic.id}`}>
+                    <Link
+                      className={styles.primaryBtnFull}
+                      href={`/practice/${topic.id}`}
+                    >
                       {ctaLabel}
                     </Link>
                   )}
@@ -189,7 +192,13 @@ export default function TopicsPage() {
 function Sliders() {
   // local icon wrapper to keep JSX clean
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M4 21v-7m0-4V3m10 18v-9m0-4V3m6 18v-5m0-4V3"
         stroke="#1f108e"

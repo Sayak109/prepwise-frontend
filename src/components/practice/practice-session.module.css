@@ -152,8 +152,9 @@
 .optionSelected {
   border-color: #1f108e;
   border-width: 2px;
-  background: #f2f0ff;
-  box-shadow: 0 0 0 3px rgba(31, 16, 142, 0.12);
+  background: #1f108e;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(31, 16, 142, 0.18);
 }
 
 .letterCircle {
@@ -178,9 +179,9 @@
 }
 
 .letterCircleSelected {
-  border-color: #1f108e;
-  background: #1f108e;
-  color: #ffffff;
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #1f108e;
 }
 
 .optionText {
@@ -195,32 +196,93 @@
 .checkWrap {
   display: inline-grid;
   place-items: center;
-  color: #a9a7ff;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
 }
 
 .checkCorrect {
-  color: #1f108e;
+  color: #ffffff;
 }
 
 .checkWrong {
+  color: #ffffff;
+}
+
+.checkSelected {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.inputCheckIcon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.inputCheckCorrect {
+  color: #1f108e;
+}
+
+.inputCheckWrong {
   color: #752c00;
 }
 
+.input {
+  padding-right: 44px;
+}
 .optionCorrect {
   border-color: #1f108e;
-  background: #3730a3;
-  color: #a9a7ff;
+  background: #1f108e;
+  color: #ffffff;
 }
 
 .optionCorrect:hover {
-  background: #3730a3;
+  background: #1f108e;
   border-color: #1f108e;
 }
 
 .optionWrong {
   border-color: #752c00;
-  background: #ffdbcc;
-  color: #351000;
+  background: #752c00;
+  color: #ffffff;
+}
+
+.prevBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #c8c4d5;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1b1b22;
+  min-width: 132px;
+  height: 46px;
+  padding: 0 22px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.prevBtn:hover {
+  border-color: #1f108e;
+  color: #1f108e;
+  background: #f2f0ff;
+}
+
+.prevBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .utilityRow {
@@ -297,7 +359,7 @@
 .answerActions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
 }
 
@@ -351,7 +413,7 @@
   font-weight: 700;
 }
 
-.explanationCard p {
+.explanationBody {
   margin-bottom: 24px;
   color: #38485d;
   font-size: 16px;

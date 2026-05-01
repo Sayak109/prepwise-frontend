@@ -48,6 +48,105 @@
   gap: 14px;
 }
 
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 0, 105, 0.35);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.modalCard {
+  width: min(520px, 96vw);
+  background: #ffffff;
+  border: 1px solid #c8c4d5;
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(15, 0, 105, 0.25);
+  padding: 18px 18px 16px;
+}
+
+.modalHead {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.warnIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ffede6;
+  color: #752c00;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 800;
+  color: #1b1b22;
+}
+
+.modalText {
+  margin: 6px 0 0;
+  color: #464553;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.modalActions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modalLeave,
+.modalCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.modalLeave {
+  background: #752c00;
+  color: #ffffff;
+  border-color: #752c00;
+}
+
+.modalLeave:hover {
+  opacity: 0.95;
+}
+
+.modalCancel {
+  background: #ffffff;
+  color: #1f108e;
+  border-color: #c8c4d5;
+}
+
+.modalCancel:hover {
+  border-color: #1f108e;
+  background: #f2f0ff;
+}
+
 .timerChip {
   display: flex;
   align-items: center;
@@ -294,12 +393,22 @@
 
 .navGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, 44px);
+  grid-auto-rows: 44px;
   gap: 8px;
+  justify-content: center;
+  align-content: start;
+  overflow-y: auto;
+  padding-right: 6px;
+  min-height: 0;
+  flex: 1;
 }
 
 .navCell {
-  aspect-ratio: 1;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 700;
