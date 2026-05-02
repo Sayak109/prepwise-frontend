@@ -305,12 +305,12 @@ export function remainingSeconds(attempt: any, test: any) {
   return Math.max(test.durationSeconds - elapsed, 0);
 }
 
-export async function evaluateAnswer(testQuestion: any, body: any) {
-  const question = await questionDto(await Question.findById(testQuestion.questionId), true);
+/** Score one answer using already-loaded question + MCQ options (no DB). */
+export function evaluateSubmissionItem(question: any, mcqOptions: any[], testQuestion: any, body: any) {
   const points = Number(testQuestion.points ?? 1);
   if (question.type === "MCQ") {
     if (!body.selectedOptionId) throw new Error("Selected option is required for MCQ questions.");
-    if (!question.options.some((o: any) => o.id === body.selectedOptionId)) throw new Error("Selected option does not belong to this question.");
+    if (!mcqOptions.some((o: any) => o.id === body.selectedOptionId)) throw new Error("Selected option does not belong to this question.");
     const isCorrect = body.selectedOptionId === question.correctOptionId;
     return { selectedOptionId: body.selectedOptionId, answerText: null, isCorrect, score: isCorrect ? points : 0 };
   }
@@ -330,6 +330,11 @@ export async function evaluateAnswer(testQuestion: any, body: any) {
     return { selectedOptionId: null, answerText: actual, isCorrect, score: isCorrect ? points : 0 };
   }
   return { selectedOptionId: null, answerText: body.answerText.trim(), isCorrect: null, score: 0 };
+}
+
+export async function evaluateAnswer(testQuestion: any, body: any) {
+  const question = await questionDto(await Question.findById(testQuestion.questionId), true);
+  return evaluateSubmissionItem(question, (question as any).options ?? [], testQuestion, body);
 }
 
 export async function refreshAttemptScore(attemptId: string) {

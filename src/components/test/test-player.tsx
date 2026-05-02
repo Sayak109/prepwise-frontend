@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { Question } from "@/types";
 import { Timer } from "@/components/test/timer";
 import { AlertTriangle, Clock3, Flag, Info, MoveLeft, MoveRight } from "lucide-react";
@@ -35,7 +36,9 @@ export function TestPlayer({
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [leaveFallbackHref, setLeaveFallbackHref] = useState<string>("/tests");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const allowLeaveRef = useRef(false);
+  const submittingRef = useRef(false);
   const activeQuestion = questions[activeIndex];
   const answeredCount = Object.keys(answers).length;
   const total = questions.length;
@@ -51,23 +54,34 @@ export function TestPlayer({
   }, [answers, questions]);
   const accuracy = Math.round((score / Math.max(total, 1)) * 100);
 
-  async function submitTest() {
+  const submitTest = useCallback(async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
     allowLeaveRef.current = true;
-    if (attemptId) {
-      const payload = questions
-        .map((q) => {
-          const val = answers[q.id];
-          if (!val) return null;
-          return q.type === "MCQ"
-            ? { questionId: q.id, selectedOptionId: val }
-            : { questionId: q.id, answerText: val };
-        })
-        .filter(Boolean) as Array<{ questionId: string; selectedOptionId?: string; answerText?: string }>;
+    try {
+      if (attemptId) {
+        const payload = questions
+          .map((q) => {
+            const val = answers[q.id];
+            if (!val) return null;
+            return q.type === "MCQ"
+              ? { questionId: q.id, selectedOptionId: val }
+              : { questionId: q.id, answerText: val };
+          })
+          .filter(Boolean) as Array<{ questionId: string; selectedOptionId?: string; answerText?: string }>;
 
-      await completeTestAttemptWithAnswers(attemptId, payload);
+        await completeTestAttemptWithAnswers(attemptId, payload);
+      }
+      router.push(`/tests/${testId}/results?attemptId=${attemptId}`);
+    } catch (err) {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+      allowLeaveRef.current = false;
+      const msg = err instanceof Error ? err.message : "Could not submit the test.";
+      toast.error(msg);
     }
-    router.push(`/tests/${testId}/results?attemptId=${attemptId}`);
-  }
+  }, [attemptId, answers, questions, router, testId]);
 
   function requestLeave(toHref?: string) {
     if (allowLeaveRef.current) {
@@ -176,8 +190,20 @@ export function TestPlayer({
                 onEnd={submitTest}
               />
             </div>
-            <button className={styles.primaryButton} onClick={submitTest}>
-              Submit Test
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => void submitTest()}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <CircularLoader size="sm" inline onPrimary />
+                  <span>Submitting…</span>
+                </>
+              ) : (
+                "Submit Test"
+              )}
             </button>
           </div>
         }
@@ -326,6 +352,13 @@ export function TestPlayer({
       </main>
 
       <AppFooter />
+
+      {isSubmitting ? (
+        <div className={styles.submitOverlay} role="status" aria-live="polite" aria-busy="true">
+          <CircularLoader size="lg" />
+          <p className={styles.submitOverlayCaption}>Submitting your exam… Please wait.</p>
+        </div>
+      ) : null}
 
       {leaveOpen ? (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-label="Leave test warning">

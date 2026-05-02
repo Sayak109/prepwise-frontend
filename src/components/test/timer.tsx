@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 export function Timer({
   initialSeconds,
   onEnd,
@@ -10,13 +11,19 @@ export function Timer({
   compact?: boolean;
 }) {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const endedRef = useRef(false);
+
   useEffect(() => {
+    endedRef.current = false;
     setSecondsLeft(initialSeconds);
   }, [initialSeconds]);
 
   useEffect(() => {
     if (secondsLeft <= 0) {
-      onEnd();
+      if (!endedRef.current) {
+        endedRef.current = true;
+        onEnd();
+      }
       return;
     }
     const id = window.setInterval(() => {

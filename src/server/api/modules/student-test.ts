@@ -1,7 +1,18 @@
 import type { NextRequest } from "next/server";
 import { apiResponse } from "@/server/api-response";
-import { Answer, Test, TestAttempt, TestAttemptQuestionState, TestQuestion } from "@/server/models";
-import { completeAttempt, currentUser, evaluateAnswer, findTests, getAttempt, readBody, refreshAttemptScore, testDto, toPlain } from "@/server/api/shared";
+import { Answer, McqOption, Question, Test, TestAttempt, TestAttemptQuestionState, TestQuestion } from "@/server/models";
+import {
+  completeAttempt,
+  currentUser,
+  evaluateAnswer,
+  evaluateSubmissionItem,
+  findTests,
+  getAttempt,
+  readBody,
+  refreshAttemptScore,
+  testDto,
+  toPlain,
+} from "@/server/api/shared";
 
 export async function handleStudentTest(req: NextRequest, path: string[], url: URL) {
   const user = path[1] === undefined || req.method === "GET" ? null : await currentUser(req);
@@ -46,11 +57,41 @@ export async function handleStudentTest(req: NextRequest, path: string[], url: U
       const body = await readBody(req);
       const attempt = await TestAttempt.findOne({ _id: attemptId, userId: me.id });
       if (!attempt) throw new Error("Test attempt not found.");
-      for (const item of body.answers ?? []) {
-        const testQuestion = toPlain(await TestQuestion.findOne({ testId: attempt.testId, questionId: item.questionId }));
-        if (!testQuestion) continue;
-        const evaluation = await evaluateAnswer(testQuestion, item);
-        await Answer.findOneAndUpdate({ attemptId, questionId: item.questionId }, { ...evaluation, userId: me.id, submittedAt: new Date() }, { upsert: true, setDefaultsOnInsert: true });
+      const answersPayload = body.answers ?? [];
+      if (answersPayload.length) {
+        const testQuestionRows = await TestQuestion.find({ testId: attempt.testId }).lean();
+        const tqByQuestionId = new Map<string, any>(
+          testQuestionRows.map((tq: any) => [String(tq.questionId), toPlain(tq)]),
+        );
+        const questionIds = [...new Set(answersPayload.map((a: any) => String(a.questionId)).filter(Boolean))];
+        const questionDocs = await Question.find({ _id: { $in: questionIds } }).lean();
+        const qById = new Map<string, any>(questionDocs.map((q: any) => [String(q._id), toPlain(q)]));
+        const mcqQuestionIds = questionDocs.filter((q: any) => q.type === "MCQ").map((q: any) => String(q._id));
+        const mcqOptionDocs =
+          mcqQuestionIds.length > 0
+            ? await McqOption.find({ questionId: { $in: mcqQuestionIds } }).sort({ displayOrder: 1 }).lean()
+            : [];
+        const optionsByQ = new Map<string, any[]>();
+        for (const opt of mcqOptionDocs) {
+          const qid = String(opt.questionId);
+          if (!optionsByQ.has(qid)) optionsByQ.set(qid, []);
+          optionsByQ.get(qid)!.push(toPlain(opt));
+        }
+        const writeTasks = answersPayload.map((item: any) => {
+          const qid = String(item.questionId);
+          const testQuestion = tqByQuestionId.get(qid);
+          if (!testQuestion) return null;
+          const q = qById.get(qid);
+          if (!q) return null;
+          const opts = q.type === "MCQ" ? optionsByQ.get(qid) ?? [] : [];
+          const evaluation = evaluateSubmissionItem(q, opts, testQuestion, item);
+          return Answer.findOneAndUpdate(
+            { attemptId, questionId: item.questionId },
+            { ...evaluation, userId: me.id, submittedAt: new Date() },
+            { upsert: true, setDefaultsOnInsert: true },
+          );
+        });
+        await Promise.all(writeTasks.filter(Boolean) as Promise<unknown>[]);
       }
       await completeAttempt(attemptId);
       return apiResponse(await getAttempt(attemptId, me.id), "Test attempt completed successfully.");

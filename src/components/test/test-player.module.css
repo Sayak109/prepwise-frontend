@@ -348,6 +348,34 @@
   opacity: 0.92;
 }
 
+.primaryButton:disabled {
+  opacity: 0.88;
+  cursor: not-allowed;
+}
+
+.submitOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(252, 248, 255, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: all;
+}
+
+.submitOverlayCaption {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f108e;
+  text-align: center;
+  max-width: 280px;
+}
+
 .ghostButton {
   border: 1px solid #0f0069;
   color: #0f0069;
