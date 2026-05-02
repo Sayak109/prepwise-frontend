@@ -27,6 +27,7 @@ export default function TestPage() {
         attemptId=""
         questions={[]}
         durationMinutes={1}
+        isLoading
       />
     );
   }

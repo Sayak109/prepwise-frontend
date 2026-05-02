@@ -1,0 +1,28 @@
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 10000;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #1f108e 0%,
+    #5b4dbe 35%,
+    #8b7fd9 50%,
+    #5b4dbe 65%,
+    #1f108e 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.1s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

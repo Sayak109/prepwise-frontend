@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { registerAction } from "@/app/actions/auth";
+import { CircularLoader } from "@/components/feedback/circular-loader";
 
 function GoogleIcon() {
   return (
@@ -30,7 +31,9 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (state.error) toast.error(state.error);
+    if (!state.error) return;
+    toast.error(state.error);
+    setPassword("");
   }, [state.error]);
 
   const passwordChecks = useMemo(() => {
@@ -147,11 +150,18 @@ export function RegisterForm() {
         </div>
 
         <button
-          className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold"
+          className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-80"
           type="submit"
           disabled={isPending}
         >
-          {isPending ? "Checking..." : "Create account"}
+          {isPending ? (
+            <>
+              <CircularLoader size="sm" inline onPrimary />
+              <span>Checking…</span>
+            </>
+          ) : (
+            "Create account"
+          )}
         </button>
       </form>
 

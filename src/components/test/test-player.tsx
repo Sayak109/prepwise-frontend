@@ -5,6 +5,7 @@ import { Question } from "@/types";
 import { Timer } from "@/components/test/timer";
 import { AlertTriangle, Clock3, Flag, Info, MoveLeft, MoveRight } from "lucide-react";
 import styles from "@/components/test/test-player.module.css";
+import { CircularLoader } from "@/components/feedback/circular-loader";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { AppFooter } from "@/components/layout/app-footer";
 import { completeTestAttemptWithAnswers, flagTestQuestion } from "@/services/student-api";
@@ -15,6 +16,8 @@ interface TestPlayerProps {
   testTitle: string;
   questions: Question[];
   durationMinutes: number;
+  /** True while starting the attempt (fetch in progress). */
+  isLoading?: boolean;
 }
 
 export function TestPlayer({
@@ -23,6 +26,7 @@ export function TestPlayer({
   testTitle,
   questions,
   durationMinutes,
+  isLoading = false,
 }: TestPlayerProps) {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -140,6 +144,21 @@ export function TestPlayer({
     if (attemptId) {
       await flagTestQuestion(attemptId, questionId, flagged);
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+        <StudentTopNav subtitle={testTitle} />
+        <main className={styles.canvas}>
+          <div className={styles.loadingState}>
+            <CircularLoader size="lg" />
+            <p className={styles.loadingCaption}>Starting test…</p>
+          </div>
+        </main>
+        <AppFooter />
+      </div>
+    );
   }
 
   return (

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { GraduationCap, MoreVertical, Search, Timer } from "lucide-react";
 import { useTopics } from "@/hooks/use-topics";
 
+import { FetchLoadingBlock } from "@/components/feedback/fetch-loading-block";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { AppFooter } from "@/components/layout/app-footer";
 import {
@@ -98,7 +99,7 @@ export default function TopicsPage() {
           </div>
         </div>
 
-        {isLoading ? <p className={styles.loading}>Loading topics...</p> : null}
+        {isLoading ? <FetchLoadingBlock message="Loading topics…" /> : null}
 
         <section className={styles.grid} aria-label="Topic library">
           {filteredTopics.map((topic) => {

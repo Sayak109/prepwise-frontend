@@ -2,6 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { FetchLoadingBlock } from "@/components/feedback/fetch-loading-block";
+import { AppFooter } from "@/components/layout/app-footer";
+import { StudentTopNav } from "@/components/layout/student-top-nav";
 import { PracticeSession } from "@/components/practice/practice-session";
 import { startTopicPractice } from "@/services/student-api";
 
@@ -15,7 +18,13 @@ export default function PracticePage() {
   });
 
   if (isLoading) {
-    return <PracticeSession topicId={topicId} topicTitle="Loading practice..." questions={[]} />;
+    return (
+      <div className="min-h-screen flex flex-col bg-[#fcf8ff]">
+        <StudentTopNav />
+        <FetchLoadingBlock message="Loading practice…" className="flex-1" />
+        <AppFooter />
+      </div>
+    );
   }
 
   if (isError || !data) {

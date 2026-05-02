@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useTests } from "@/hooks/use-tests";
 import styles from "@/app/(student)/tests/tests-listing.module.css";
+import { FetchLoadingBlock } from "@/components/feedback/fetch-loading-block";
+import { AppFooter } from "@/components/layout/app-footer";
 import { StudentTopNav } from "@/components/layout/student-top-nav";
 import type { Test } from "@/types";
 
@@ -163,9 +165,7 @@ export default function TestsPage() {
             </div>
           </div>
 
-          {isLoading ? (
-            <p className={styles.loading}>Loading exams...</p>
-          ) : null}
+          {isLoading ? <FetchLoadingBlock message="Loading mock tests…" className="py-12" /> : null}
 
           <div className={styles.grid}>
             {cards.map((card, idx) => (
@@ -217,17 +217,7 @@ export default function TestsPage() {
         </main>
       </div>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerLeft}>
-          <span>PrepWise</span>
-          <p>© 2024 PrepWise. All rights reserved.</p>
-        </div>
-        <div className={styles.footerLinks}>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Contact Support</a>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

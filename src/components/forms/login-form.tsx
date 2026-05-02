@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { CircularLoader } from "@/components/feedback/circular-loader";
 import toast from "react-hot-toast";
 import { loginAction } from "@/app/actions/auth";
 
@@ -122,11 +123,18 @@ export function LoginForm() {
         </div>
 
         <button
-          className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold"
+          className="w-full bg-[#1f108e] text-white py-3.5 rounded-lg hover:bg-[#3730a3] transition-all duration-200 shadow-sm active:scale-[0.98] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-80"
           type="submit"
           disabled={isPending}
         >
-          {isPending ? "Checking..." : "Continue"}
+          {isPending ? (
+            <>
+              <CircularLoader size="sm" inline onPrimary />
+              <span>Checking…</span>
+            </>
+          ) : (
+            "Continue"
+          )}
         </button>
       </form>
     </div>

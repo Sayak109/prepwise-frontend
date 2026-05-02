@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE } from "@/lib/constants";
 
-const protectedStudentPaths = ["/dashboard", "/tests", "/test", "/results", "/profile"];
+/** Paths that do not require an auth cookie (everything else is protected). */
+function isPublicPath(pathname: string): boolean {
+  if (
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico" ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$/i.test(pathname)
+  ) {
+    return true;
+  }
+  if (pathname === "/" || pathname === "/topic") return true;
+  if (pathname.startsWith("/login")) return true;
+  if (pathname.startsWith("/register")) return true;
+  if (pathname.startsWith("/topics")) return true;
+  return false;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const needsAuth =
-    protectedStudentPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
-    pathname.startsWith("/practice/");
-
-  if (!needsAuth) return NextResponse.next();
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
 
   const token = request.cookies.get(AUTH_COOKIE)?.value;
   if (token) return NextResponse.next();
@@ -21,18 +33,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // List exact paths separately: `/tests/:path*` does not always run middleware for `/tests` alone.
   matcher: [
-    "/dashboard",
-    "/dashboard/:path*",
-    "/tests",
-    "/tests/:path*",
-    "/test",
-    "/test/:path*",
-    "/results",
-    "/results/:path*",
-    "/practice/:path*",
-    "/profile",
-    "/profile/:path*",
+    /*
+     * Run on all non-API, non-static asset routes so exact paths like `/tests`
+     * are always covered (narrow matchers can skip the bare URL in some setups).
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };
