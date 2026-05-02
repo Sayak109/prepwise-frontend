@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { CircularLoader } from "@/components/feedback/circular-loader";
 import toast from "react-hot-toast";
 import { loginAction } from "@/app/actions/auth";
@@ -48,6 +49,7 @@ function AppleIcon() {
 
 export function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, {});
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
@@ -112,14 +114,24 @@ export function LoginForm() {
           >
             Password
           </label>
-          <input
-            id="password"
-            name="password"
-            placeholder="Password"
-            type="password"
-            required
-            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#1f108e] focus:border-[#1f108e] outline-none transition-all duration-200"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              placeholder="Password"
+              type={showPassword ? "text" : "password"}
+              required
+              className="w-full px-4 py-3 pr-12 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#1f108e] focus:border-[#1f108e] outline-none transition-all duration-200"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         <button

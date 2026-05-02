@@ -100,11 +100,6 @@
   color: #1b1b22;
 }
 
-.loading {
-  color: #777584;
-  margin-bottom: 14px;
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));

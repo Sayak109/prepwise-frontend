@@ -59,7 +59,6 @@
 }
 .searchWrap input { border: none; outline: none; width: 100%; font-size: 15px; background: transparent; color: #1b1b22; }
 
-.loading { margin-bottom: 12px; color: #6f6d7d; font-size: 14px; }
 .emptyState {
   background: #fff;
   border: 1px solid #c8c4d5;
