@@ -73,6 +73,16 @@ function getAxiosMessage(error: unknown) {
     const message = data?.message;
     if (Array.isArray(message)) return message.map(String).join(", ");
     if (typeof message === "string" && message.trim()) return message;
+
+    if (!error.response) {
+      const code = error.code;
+      const hint =
+        code === "ECONNREFUSED" || code === "ENOTFOUND" || error.message?.includes("localhost")
+          ? " Server actions could not reach the API. In production, set NEXT_PUBLIC_APP_URL to your live site URL (or deploy on Vercel so VERCEL_URL is set)."
+          : "";
+      if (error.message?.trim()) return `${error.message}.${hint}`;
+      return `Network error${code ? ` (${code})` : ""}.${hint}`.trim();
+    }
   }
   return "Something went wrong. Please try again.";
 }
