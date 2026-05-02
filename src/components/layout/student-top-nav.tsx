@@ -6,6 +6,14 @@ import { usePathname } from "next/navigation";
 import { Bell, Calculator, Minus, UserCircle2, X } from "lucide-react";
 import styles from "@/components/layout/student-top-nav.module.css";
 import { logoutAction } from "@/app/actions/auth";
+import { AUTH_COOKIE } from "@/lib/constants";
+
+function readAuthTokenPresent(): boolean {
+  if (typeof document === "undefined") return false;
+  const row = document.cookie.split("; ").find((r) => r.startsWith(`${AUTH_COOKIE}=`));
+  const raw = row?.split("=")[1];
+  return Boolean(raw && decodeURIComponent(raw).length > 0);
+}
 
 const menu = [
   { href: "/dashboard", label: "Dashboard" },
@@ -23,6 +31,7 @@ export function StudentTopNav({
   navigationGuard?: (href: string) => void;
 }) {
   const pathname = usePathname();
+  const [authPresent, setAuthPresent] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState("");
@@ -32,6 +41,10 @@ export function StudentTopNav({
   const dragOffset = useRef({ x: 0, y: 0 });
   const profileRef = useRef<HTMLDivElement | null>(null);
   const calcRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setAuthPresent(readAuthTokenPresent());
+  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -120,34 +133,38 @@ export function StudentTopNav({
       <button className={styles.proButton} type="button">
         Upgrade Pro
       </button>
-      <div className={styles.iconGroup}>
-        <button type="button" className={styles.iconBtn} aria-label="Notifications">
-          <Bell size={18} />
-        </button>
-      </div>
-      <div className={styles.profileWrap} ref={profileRef}>
-        <button
-          type="button"
-          className={styles.avatarBtn}
-          aria-label="Profile menu"
-          aria-expanded={profileOpen}
-          onClick={() => setProfileOpen((v) => !v)}
-        >
-          <UserCircle2 size={20} />
-        </button>
-        {profileOpen ? (
-          <div className={styles.profileMenu}>
-            <Link href="/profile" className={styles.profileMenuItem} onClick={() => setProfileOpen(false)}>
-              My Profile
-            </Link>
-            <form action={logoutAction}>
-              <button type="submit" className={styles.profileMenuItemDanger}>
-                Logout
-              </button>
-            </form>
+      {authPresent ? (
+        <>
+          <div className={styles.iconGroup}>
+            <button type="button" className={styles.iconBtn} aria-label="Notifications">
+              <Bell size={18} />
+            </button>
           </div>
-        ) : null}
-      </div>
+          <div className={styles.profileWrap} ref={profileRef}>
+            <button
+              type="button"
+              className={styles.avatarBtn}
+              aria-label="Profile menu"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((v) => !v)}
+            >
+              <UserCircle2 size={20} />
+            </button>
+            {profileOpen ? (
+              <div className={styles.profileMenu}>
+                <Link href="/profile" className={styles.profileMenuItem} onClick={() => setProfileOpen(false)}>
+                  My Profile
+                </Link>
+                <form action={logoutAction}>
+                  <button type="submit" className={styles.profileMenuItemDanger}>
+                    Logout
+                  </button>
+                </form>
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
     </>
   );
 

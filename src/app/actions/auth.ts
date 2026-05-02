@@ -3,6 +3,7 @@ import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_COOKIE, FLASH_COOKIE, REFRESH_COOKIE, ROLE_COOKIE, USER_COOKIE } from "@/lib/constants";
+import { serverApiUrl } from "@/lib/api-url";
 import { decryptFromBackend, encryptForBackend } from "@/lib/server-crypto";
 import type { AuthResponse, User } from "@/types";
 
@@ -15,8 +16,6 @@ type CheckUserResponse = {
   isStudent: boolean;
   isEditor: boolean;
 };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
 function normalizeUser(user: any): User {
   return {
@@ -62,7 +61,7 @@ async function setFlashToast(type: "success" | "error", message: string) {
 }
 
 async function fetchCurrentUser(token: string) {
-  const response = await axios.get<BackendApiResponse<any>>(`${API_URL}/auth/me`, {
+  const response = await axios.get<BackendApiResponse<any>>(serverApiUrl("/auth/me"), {
     headers: { Authorization: `Bearer ${token}` },
   });
   return normalizeUser(response.data.data);
@@ -70,16 +69,17 @@ async function fetchCurrentUser(token: string) {
 
 function getAxiosMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
-    const message = error.response?.data?.message;
-    if (Array.isArray(message)) return message.join(", ");
-    if (typeof message === "string") return message;
+    const data = error.response?.data as { message?: unknown } | undefined;
+    const message = data?.message;
+    if (Array.isArray(message)) return message.map(String).join(", ");
+    if (typeof message === "string" && message.trim()) return message;
   }
   return "Something went wrong. Please try again.";
 }
 
 async function checkUser(email: string) {
   const encryptedPayload = encryptForBackend({ email });
-  const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/check`, {
+  const response = await axios.post<BackendEncryptedResponse>(serverApiUrl("/auth/check"), {
     data: encryptedPayload,
   });
   const check = decryptFromBackend<BackendApiResponse<CheckUserResponse>>(response.data.data);
@@ -89,7 +89,12 @@ async function checkUser(email: string) {
 export async function loginAction(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const check = await checkUser(email);
+  let check: CheckUserResponse;
+  try {
+    check = await checkUser(email);
+  } catch (error) {
+    return { error: getAxiosMessage(error) };
+  }
 
   if (!check.isRegistered) {
     return { error: "Account not found. Please register first." };
@@ -102,7 +107,7 @@ export async function loginAction(_prevState: AuthActionState, formData: FormDat
   });
 
   try {
-    const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/login`, {
+    const response = await axios.post<BackendEncryptedResponse>(serverApiUrl("/auth/login"), {
       data: encryptedPayload,
     });
     const authResponse = decryptFromBackend<BackendApiResponse<{ accessToken: string; refreshToken: string }>>(response.data.data);
@@ -123,7 +128,12 @@ export async function registerAction(_prevState: AuthActionState, formData: Form
   const name = String(formData.get("name") ?? "");
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const check = await checkUser(email);
+  let check: CheckUserResponse;
+  try {
+    check = await checkUser(email);
+  } catch (error) {
+    return { error: getAxiosMessage(error) };
+  }
 
   if (check.isRegistered) {
     return { error: "Account already exists. Please login." };
@@ -137,7 +147,7 @@ export async function registerAction(_prevState: AuthActionState, formData: Form
   });
 
   try {
-    const response = await axios.post<BackendEncryptedResponse>(`${API_URL}/auth/register`, {
+    const response = await axios.post<BackendEncryptedResponse>(serverApiUrl("/auth/register"), {
       data: encryptedPayload,
     });
     const authResponse = decryptFromBackend<BackendApiResponse<{ accessToken: string; refreshToken: string }>>(response.data.data);
@@ -161,7 +171,7 @@ export async function logoutAction() {
   if (token) {
     try {
       await axios.post(
-        `${API_URL}/auth/logout`,
+        serverApiUrl("/auth/logout"),
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

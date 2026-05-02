@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE } from "@/lib/constants";
 
-const protectedStudentPaths = ["/dashboard", "/tests", "/results"];
+const protectedStudentPaths = ["/dashboard", "/tests", "/test", "/results", "/profile"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,5 +21,18 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/tests/:path*", "/results/:path*", "/practice/:path*"],
+  // List exact paths separately: `/tests/:path*` does not always run middleware for `/tests` alone.
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/tests",
+    "/tests/:path*",
+    "/test",
+    "/test/:path*",
+    "/results",
+    "/results/:path*",
+    "/practice/:path*",
+    "/profile",
+    "/profile/:path*",
+  ],
 };

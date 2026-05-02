@@ -2,7 +2,7 @@ import axios from "axios";
 import { AUTH_COOKIE, FLASH_COOKIE, REFRESH_COOKIE, ROLE_COOKIE, USER_COOKIE } from "@/lib/constants";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "/api/v1",
   withCredentials: true,
 });
 let refreshing = false;

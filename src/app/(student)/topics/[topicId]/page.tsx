@@ -2,8 +2,7 @@ import Link from "next/link";
 import axios from "axios";
 import { notFound } from "next/navigation";
 import { StudentLayout } from "@/components/layout/student-layout";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+import { serverApiUrl } from "@/lib/api-url";
 
 type PracticeTopicResponseItem = {
   id: string;
@@ -14,7 +13,7 @@ type PracticeTopicResponseItem = {
 export default async function TopicDetailPage({ params }: { params: Promise<{ topicId: string }> }) {
   const { topicId } = await params;
   const response = await axios
-    .get(`${API_URL}/practice/topics`, {
+    .get(serverApiUrl("/practice/topics"), {
       params: { limit: 100, includeQuestions: false },
     })
     .catch(() => null);
